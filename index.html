@@ -82,9 +82,11 @@
     // Global Tracking Lists
     const interactiveObjects = [];
     const windTurbines = [];
+    const animatedVehicles = [];
     const nighttimeEmissives = [];
     const nighttimePointLights = [];
     const pedestrians = [];
+    const cyclists = [];
     const riverFishes = [];
 
     const daySky = new THREE.Color(0x87ceeb);
@@ -99,15 +101,23 @@
       color: 0xef4444, metalness: 0.1, roughness: 0.1, transparent: true, opacity: 0.75, transmission: 0.8
     });
 
+    const carGlassMat = new THREE.MeshPhysicalMaterial({
+      color: 0x38bdf8, metalness: 0.2, roughness: 0.1, transparent: true, opacity: 0.6, transmission: 0.85
+    });
+
     const solarMat = new THREE.MeshStandardMaterial({
       color: 0x0284c7, metalness: 0.95, roughness: 0.1, flatShading: true
     });
 
-    // Night Glow Material for Windows & Lights
     const glowWindowMat = new THREE.MeshStandardMaterial({
       color: 0xfef08a, emissive: 0xfde047, emissiveIntensity: 0
     });
     nighttimeEmissives.push(glowWindowMat);
+
+    const streetlightBulbMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, emissive: 0xffaa33, emissiveIntensity: 0
+    });
+    nighttimeEmissives.push(streetlightBulbMat);
 
     // --- 3. EXPANDED TERRAIN & RIVER ---
     const terrain = new THREE.Group();
@@ -135,10 +145,10 @@
 
     scene.add(terrain);
 
-    // Swimming Fishes in River
+    // River Fishes
     function createRiverFish(x, z) {
       const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 4), mat(0xf97316)); // Orange fish
+      const body = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 4), mat(0xf97316));
       body.rotation.x = Math.PI / 2;
       g.add(body);
 
@@ -155,7 +165,7 @@
       createRiverFish((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 30);
     }
 
-    // Wooden Arch Bridge over River
+    // Wooden Arch Bridge
     function createWoodenBridge(x, z) {
       const g = new THREE.Group();
       const woodMat = mat(0x92400e, 0.9, 0.05);
@@ -183,7 +193,7 @@
     }
     createWoodenBridge(0, 0);
 
-    // Road Networks
+    // Roads & Bike Lanes
     const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(36, 0.02, 2.8), mat(0x1e293b));
     mainRoad.position.set(0, 0.02, 0);
     scene.add(mainRoad);
@@ -196,16 +206,116 @@
     westRoad.position.set(-6.5, 0.021, 0);
     scene.add(westRoad);
 
-    // Helper: Add Big Rooftop Solar Panel
-    function addBigRooftopSolar(parent, width, depth, heightPos) {
-      const solarGroup = new THREE.Group();
-      const panel = new THREE.Mesh(new THREE.BoxGeometry(width, 0.08, depth), solarMat);
-      panel.position.set(0, heightPos, 0);
-      solarGroup.add(panel);
-      parent.add(solarGroup);
+    const bikeLaneWest = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.022, 36), mat(0x16a34a));
+    bikeLaneWest.position.set(-5.0, 0.022, 0);
+    scene.add(bikeLaneWest);
+
+    // --- STREETLIGHTS IN MAIN ROADS & DARK CORNERS ---
+    function createStreetlight(x, z) {
+      const g = new THREE.Group();
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 8), mat(0x334155));
+      pole.position.y = 1.1;
+      g.add(pole);
+
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), streetlightBulbMat);
+      bulb.position.y = 2.2;
+      g.add(bulb);
+
+      const pLight = new THREE.PointLight(0xffaa33, 0, 7, 2);
+      pLight.position.y = 2.1;
+      g.add(pLight);
+      nighttimePointLights.push(pLight);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
     }
 
-    // Helper: Add Night Light Inside Building
+    // Main & Dark Corner Streetlights
+    createStreetlight(-5, 2);   createStreetlight(-5, -2);
+    createStreetlight(5, 2);    createStreetlight(5, -2);
+    createStreetlight(-5, 10);  createStreetlight(5, 10);
+    createStreetlight(-14, -14); createStreetlight(14, -14);
+    createStreetlight(-14, 14);  createStreetlight(14, 14);
+
+    // --- TRASH & RECYCLING BINS ---
+    function createTrashBins(x, z) {
+      const g = new THREE.Group();
+      const binColors = [0xef4444, 0x3b82f6, 0x22c55e]; // Red, Blue, Green
+      binColors.forEach((col, i) => {
+        const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 0.45, 12), mat(col));
+        bin.position.set((i - 1) * 0.4, 0.225, 0);
+        g.add(bin);
+      });
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+
+    createTrashBins(-5.5, 4);
+    createTrashBins(5.5, -4);
+    createTrashBins(-5.5, -10);
+
+    // --- PARK & PLAYGROUND WITH BENCHES ---
+    function createParkAndPlayground(x, z) {
+      const g = new THREE.Group();
+
+      // Lawn Base
+      const lawn = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.03, 5.5), mat(0x15803d));
+      lawn.position.y = 0.015;
+      g.add(lawn);
+
+      // Sandbox
+      const sandbox = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 1.8), mat(0xfde047));
+      sandbox.position.set(-1.0, 0.05, -1.2);
+      g.add(sandbox);
+
+      // Playground Slide
+      const slidePost = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2), mat(0xef4444));
+      slidePost.position.set(1.2, 0.6, -1.2);
+      g.add(slidePost);
+
+      const slideRamp = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.05, 1.4), mat(0x0284c7));
+      slideRamp.rotation.x = Math.PI / 6;
+      slideRamp.position.set(1.2, 0.4, -0.6);
+      g.add(slideRamp);
+
+      // Park Benches
+      function createBench(bx, bz, rotY) {
+        const bg = new THREE.Group();
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.3), mat(0x78350f));
+        seat.position.y = 0.25;
+        bg.add(seat);
+        const back = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.04), mat(0x78350f));
+        back.position.set(0, 0.4, -0.13);
+        bg.add(back);
+
+        bg.rotation.y = rotY;
+        bg.position.set(bx, 0, bz);
+        g.add(bg);
+      }
+
+      createBench(-1.2, 1.5, 0);
+      createBench(1.2, 1.5, Math.PI);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "RECREATION", title: "Eco Playground & Park",
+        description: "Community park with sandbox, slide, and relaxing wooden benches.",
+        stat1: "100%", stat1Label: "Green Space", stat2: "Family", stat2Label: "Playground"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
+    }
+
+    createParkAndPlayground(-5.5, -3.5);
+
+    // Helpers
+    function addBigRooftopSolar(parent, width, depth, heightPos) {
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(width, 0.08, depth), solarMat);
+      panel.position.set(0, heightPos, 0);
+      parent.add(panel);
+    }
+
     function addInteriorNightLight(parent, heightPos) {
       const pLight = new THREE.PointLight(0xffaa33, 0, 8, 2);
       pLight.position.set(0, heightPos, 0);
@@ -213,7 +323,6 @@
       nighttimePointLights.push(pLight);
     }
 
-    // Signboard Generator
     function createSignboard(text, width = 2.2, height = 0.6) {
       const canvas = document.createElement('canvas');
       canvas.width = 256; canvas.height = 64;
@@ -228,7 +337,6 @@
       return new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
     }
 
-    // Philippine Flag
     function createPhilippineFlag() {
       const g = new THREE.Group();
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.5, 8), mat(0xd1d5db));
@@ -252,13 +360,11 @@
       return g;
     }
 
-    // --- 4. SPACED-OUT CIVIC BUILDINGS ---
-    // A. HOSPITAL WITH RED WINDOWS
+    // --- 4. CIVIC BUILDINGS ---
     function createHospital(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(4.2, 4.0, 3.6), mat(0xf8fafc));
       body.position.y = 2.0;
-      body.castShadow = true;
       g.add(body);
 
       const winGeo = new THREE.PlaneGeometry(0.7, 0.9);
@@ -288,7 +394,6 @@
       scene.add(g);
     }
 
-    // B. SCHOOL WITH PHILIPPINE FLAG
     function createSchool(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(4.8, 2.8, 3.5), mat(0xfef3c7));
@@ -317,7 +422,6 @@
       scene.add(g);
     }
 
-    // C. CATHOLIC CHURCH (SET BACK FROM ROAD)
     function createChurch(x, z) {
       const g = new THREE.Group();
       const nave = new THREE.Mesh(new THREE.BoxGeometry(3.6, 3.0, 4.2), mat(0xf1f5f9));
@@ -353,7 +457,6 @@
       scene.add(g);
     }
 
-    // D. SPACED-OUT GROCERY MARKET
     function createGroceryMarket(x, z) {
       const g = new THREE.Group();
       const hall = new THREE.Mesh(new THREE.BoxGeometry(4.0, 2.4, 3.2), mat(0x0f766e));
@@ -385,7 +488,6 @@
       scene.add(g);
     }
 
-    // E. POLICE & FIRE STATIONS
     function createPoliceStation(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(3.0, 2.6, 2.4), mat(0x1e3a8a));
@@ -420,7 +522,6 @@
       scene.add(g);
     }
 
-    // Position Civic Buildings with Large Spacing
     createHospital(11.5, -13);
     createSchool(11.5, -7);
     createChurch(12.0, -1);
@@ -428,7 +529,7 @@
     createPoliceStation(11.5, 10.5);
     createFireStation(11.5, 14.5);
 
-    // --- 5. EXACTLY 7 RESIDENTIAL HOUSES WITH SOLAR PANELS & LIGHTS ---
+    // --- 5. EXACTLY 7 RESIDENTIAL HOUSES ---
     function createSolarHouse(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.5, 2.0), mat(0xfff7ed));
@@ -440,9 +541,7 @@
       roof.position.y = 2.0;
       g.add(roof);
 
-      // Windows with Night Glow
-      const winGeo = new THREE.PlaneGeometry(0.4, 0.5);
-      const win = new THREE.Mesh(winGeo, glowWindowMat);
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.5), glowWindowMat);
       win.position.set(0, 0.8, 1.01);
       g.add(win);
 
@@ -460,7 +559,6 @@
       scene.add(g);
     }
 
-    // 7 Spaced Solar Houses
     const houseCoords = [
       [-11.5, -13], [-11.5, -9.5],
       [-11.5, -6.0], [-11.5, -2.5],
@@ -469,23 +567,59 @@
     ];
     houseCoords.forEach(([hx, hz]) => createSolarHouse(hx, hz));
 
-    // EV Parking Lot
+    // CARS WITH WINDOWS THAT ROUTE & PARK
     function createParkingLot(x, z) {
       const g = new THREE.Group();
       const pad = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.02, 5.0), mat(0x334155));
       pad.position.y = 0.02;
       g.add(pad);
 
-      const parkedEV = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 1.9), mat(0x10b981));
-      parkedEV.position.set(0, 0.3, 0);
-      g.add(parkedEV);
+      // Lines
+      for (let lineZ of [-1.5, 0, 1.5]) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.03, 0.1), mat(0xffffff));
+        line.position.set(0, 0.025, lineZ);
+        g.add(line);
+      }
 
       g.position.set(x, 0, z);
       scene.add(g);
     }
     createParkingLot(-11.5, -16);
 
-    // --- 6. FARM WITH CORN, CABBAGE, CARROTS & VEGETABLES ---
+    // EV Car Model with Windows
+    function createEVWithWindows(colorHex) {
+      const carGroup = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 1.9), mat(colorHex));
+      body.position.y = 0.35;
+      carGroup.add(body);
+
+      // Cabin Glass Windows
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.45, 1.0), carGlassMat);
+      cabin.position.set(0, 0.7, -0.1);
+      carGroup.add(cabin);
+
+      scene.add(carGroup);
+      return carGroup;
+    }
+
+    // Roadway to Parking Waypoints Loop
+    const carPathWaypoints = [
+      new THREE.Vector3(6.5, 0, 14),
+      new THREE.Vector3(6.5, 0, 0),
+      new THREE.Vector3(-6.5, 0, 0),
+      new THREE.Vector3(-6.5, 0, -16),
+      new THREE.Vector3(-11.5, 0, -16) // Final Parking Stall Destination
+    ];
+
+    const animatedCar = createEVWithWindows(0x10b981);
+    animatedVehicles.push({
+      group: animatedCar,
+      waypoints: carPathWaypoints,
+      targetIdx: 0,
+      speed: 4.0
+    });
+
+    // --- 6. FARM ---
     function createFarm(x, z) {
       const g = new THREE.Group();
       const barn = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.0, 2.4), mat(0xd97706));
@@ -506,7 +640,6 @@
       g.add(rotorGroup);
       windTurbines.push({ rotor: rotorGroup, speed: 2.0 });
 
-      // Crop Rows
       const soil = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.1, 3.2), mat(0x3d2314));
       soil.position.set(0, 0.05, 3.2);
       g.add(soil);
@@ -529,7 +662,31 @@
     }
     createFarm(-11.5, 13);
 
-    // --- 7. 7 NAMED PERSONS WITH RAIN UMBRELLAS ---
+    // --- 7. BICYCLES & 7 NAMED PERSONS ---
+    function createCyclist(x, z, shirtHex) {
+      const g = new THREE.Group();
+      // Bike Frames
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.8), mat(0xef4444));
+      frame.position.y = 0.25;
+      g.add(frame);
+      for (let wz of [-0.35, 0.35]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.04, 12), mat(0x334155));
+        wheel.rotation.z = Math.PI / 2;
+        wheel.position.set(0, 0.18, wz);
+        g.add(wheel);
+      }
+      // Rider
+      const rider = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.18), mat(shirtHex));
+      rider.position.set(0, 0.45, 0);
+      g.add(rider);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+      cyclists.push({ group: g, speed: 1.2 });
+    }
+
+    createCyclist(-5.0, 5, 0x0284c7);
+
     function createNamedPerson(x, z, nameText, shirtHex) {
       const g = new THREE.Group();
 
@@ -541,7 +698,6 @@
       head.position.y = 0.85;
       g.add(head);
 
-      // Umbrella Mesh (Toggled on Rain)
       const umbrellaGroup = new THREE.Group();
       const canopy = new THREE.Mesh(new THREE.ConeGeometry(0.6, 0.25, 8), mat(shirtHex));
       canopy.position.y = 1.35;
@@ -551,10 +707,9 @@
       handle.position.y = 1.05;
       umbrellaGroup.add(handle);
 
-      umbrellaGroup.visible = false; // Initially hidden
+      umbrellaGroup.visible = false;
       g.add(umbrellaGroup);
 
-      // Overhead Name Tag
       const canvas = document.createElement('canvas');
       canvas.width = 128; canvas.height = 32;
       const ctx = canvas.getContext('2d');
@@ -585,7 +740,7 @@
     ];
     citizens.forEach(c => createNamedPerson(c.x, c.z, c.name, c.color));
 
-    // --- 8. TREES & FLOWER BUSHES ---
+    // --- 8. TREES ---
     function createTree(x, z) {
       const g = new THREE.Group();
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 1.5, 6), mat(0x78350f));
@@ -606,7 +761,7 @@
     ];
     treePositions.forEach(([tx, tz]) => createTree(tx, tz));
 
-    // --- 9. WEATHER & ANIMATION LOOP ---
+    // --- 9. WEATHER & DAY/NIGHT ANIMATION ---
     const rainCount = 800;
     const rainGeo = new THREE.BufferGeometry();
     const rainPos = new Float32Array(rainCount * 3);
@@ -639,7 +794,12 @@
         nightFactor = Math.min(Math.max((0.1 - sunHeight) / 0.3, 0), 1);
       }
 
-      // Turn on Building & House Night Lights
+      // Nighttime Schedule: People & Cyclists go indoors during Night
+      const isNight = sunHeight <= 0.0;
+      pedestrians.forEach(p => p.group.visible = !isNight);
+      cyclists.forEach(c => c.group.visible = !isNight);
+
+      // Night Emissives & Pointlights
       nighttimeEmissives.forEach(m => m.emissiveIntensity = nightFactor * 2.5);
       nighttimePointLights.forEach(l => l.intensity = nightFactor * 4.0);
 
@@ -690,7 +850,6 @@
 
     document.getElementById('toggleRain').addEventListener('click', () => {
       rain.visible = !rain.visible;
-      // Toggle umbrellas for walking citizens during rain
       pedestrians.forEach(p => p.umbrella.visible = rain.visible);
     });
 
@@ -702,6 +861,7 @@
 
     // --- 10. MAIN ANIMATION LOOP ---
     const clock = new THREE.Clock();
+    const carLookVec = new THREE.Vector3();
 
     function animate() {
       requestAnimationFrame(animate);
@@ -710,7 +870,7 @@
 
       updateDayNightCycle(dt);
 
-      // Rotate Windmills
+      // Rotate Windmill
       windTurbines.forEach(wt => { wt.rotor.rotation.z += wt.speed * dt; });
 
       // Swim River Fishes
@@ -719,13 +879,41 @@
         if (f.group.position.z > 16) f.group.position.z = -16;
       });
 
-      // Walk Pedestrians along sidewalk
+      // Walk Citizens along Sidewalks (Daytime)
       pedestrians.forEach(p => {
-        p.group.position.z += p.speed * dt * p.dir;
-        if (Math.abs(p.group.position.z) > 15) p.dir *= -1;
+        if (p.group.visible) {
+          p.group.position.z += p.speed * dt * p.dir;
+          if (Math.abs(p.group.position.z) > 15) p.dir *= -1;
+        }
       });
 
-      // Animate Rain Drops
+      // Move Cyclists along Bike Lane
+      cyclists.forEach(c => {
+        if (c.group.visible) {
+          c.group.position.z += c.speed * dt;
+          if (c.group.position.z > 16) c.group.position.z = -16;
+        }
+      });
+
+      // Route Cars to Parking Lot
+      animatedVehicles.forEach(v => {
+        const target = v.waypoints[v.targetIdx];
+        carLookVec.subVectors(target, v.group.position);
+        carLookVec.y = 0;
+        const dist = carLookVec.length();
+
+        if (dist < 0.2) {
+          if (v.targetIdx < v.waypoints.length - 1) {
+            v.targetIdx++;
+          }
+        } else {
+          carLookVec.normalize();
+          v.group.position.addScaledVector(carLookVec, v.speed * dt);
+          v.group.lookAt(target.x, v.group.position.y, target.z);
+        }
+      });
+
+      // Animate Rain
       if (rain.visible) {
         const positions = rain.geometry.attributes.position.array;
         for (let i = 1; i < rainCount * 3; i += 3) {
