@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Complete Sustainable City Diorama</title>
+  <title>Reference-Matched Sustainable City Diorama</title>
   <link rel="stylesheet" href="style.css">
   
   <!-- Three.js and OrbitControls -->
@@ -21,7 +21,7 @@
       <label for="speedSlider">Day/Night Speed <span id="speedVal">1.0x</span></label>
       <input type="range" id="speedSlider" min="0" max="3" step="0.1" value="1">
     </div>
-    <button id="toggleRain" class="btn">Toggle Weather</button>
+    <button id="toggleRain" class="btn">Toggle Rain</button>
   </div>
 
   <!-- Interactive Info Card -->
@@ -43,7 +43,7 @@
   </div>
 
   <script>
-    // --- 1. SETUP SCENE, CAMERA, & RENDERER ---
+    // --- 1. SCENE, CAMERA, & RENDERER SETUP ---
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb);
@@ -63,7 +63,7 @@
     controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 - 0.02;
 
-    // --- 2. LIGHTING SETUP ---
+    // --- 2. LIGHTING & GLOBAL ARRAYS ---
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
@@ -79,12 +79,10 @@
     sunLight.shadow.camera.bottom = -d;
     scene.add(sunLight);
 
-    // Global Tracking Lists
     const interactiveObjects = [];
     const windTurbines = [];
     const animatedVehicles = [];
     const grazingAnimals = [];
-    const pedestrians = [];
     const nighttimeEmissives = [];
     const nighttimeLights = [];
 
@@ -95,31 +93,41 @@
     const mat = (col, rough = 0.8, metal = 0.1) => 
       new THREE.MeshStandardMaterial({ color: col, flatShading: true, roughness: rough, metalness: metal });
 
-    // Emissives
-    const windowMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, emissive: 0xfde047, emissiveIntensity: 0 });
-    nighttimeEmissives.push(windowMat);
+    // Glass Material for Modern Building
+    const glassMat = new THREE.MeshPhysicalMaterial({
+      color: 0x38bdf8,
+      metalness: 0.1,
+      roughness: 0.1,
+      transparent: true,
+      opacity: 0.75,
+      transmission: 0.8
+    });
+
+    // Dark Blue Solar Panel Material (Image Reference 3)
+    const solarMat = new THREE.MeshStandardMaterial({
+      color: 0x1e1b4b,
+      metalness: 0.9,
+      roughness: 0.1,
+      flatShading: true
+    });
 
     // --- 3. TERRAIN & RIVER ---
     const terrain = new THREE.Group();
 
-    // Base Crust
     const baseCrust = new THREE.Mesh(new THREE.BoxGeometry(32, 4, 32), mat(0x451a03));
     baseCrust.position.y = -3.0;
     terrain.add(baseCrust);
 
-    // Left Bank (Residential & Farm)
     const westBank = new THREE.Mesh(new THREE.BoxGeometry(13, 1, 32), mat(0x16a34a));
     westBank.position.set(-9.5, -0.5, 0);
     westBank.receiveShadow = true;
     terrain.add(westBank);
 
-    // Right Bank (Civic Infrastructure)
     const eastBank = new THREE.Mesh(new THREE.BoxGeometry(13, 1, 32), mat(0x16a34a));
     eastBank.position.set(9.5, -0.5, 0);
     eastBank.receiveShadow = true;
     terrain.add(eastBank);
 
-    // River
     const river = new THREE.Mesh(
       new THREE.BoxGeometry(6, 0.8, 32),
       new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, transparent: true, opacity: 0.85 })
@@ -129,402 +137,266 @@
 
     scene.add(terrain);
 
-    // Road Bridge
-    function createBridge() {
+    // --- 4. WOODEN ARCH PEDESTRIAN BRIDGE (IMAGE REFERENCE 4) ---
+    function createWoodenArchBridge(x, z) {
       const g = new THREE.Group();
-      const deck = new THREE.Mesh(new THREE.BoxGeometry(7, 0.3, 3.5), mat(0x334155));
-      deck.position.set(0, 0.15, 0);
+      const woodMat = mat(0x92400e, 0.9, 0.05);
+
+      // Curved Deck
+      const deckGeo = new THREE.BoxGeometry(6.5, 0.25, 2.6);
+      const deck = new THREE.Mesh(deckGeo, woodMat);
+      deck.position.set(0, 0.2, 0);
       deck.castShadow = true;
       g.add(deck);
 
-      for (let zOff of [-1.6, 1.6]) {
-        const arch = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.12, 6, 16, Math.PI), mat(0xd97706));
-        arch.position.set(0, 0.2, zOff);
+      // Curved Arched Handrails
+      for (let zOff of [-1.2, 1.2]) {
+        const arch = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.1, 8, 16, Math.PI), woodMat);
         arch.rotation.x = Math.PI;
+        arch.position.set(0, 0.3, zOff);
         g.add(arch);
+
+        // Baluster Posts
+        for (let xOff = -2.5; xOff <= 2.5; xOff += 1.0) {
+          const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.8), woodMat);
+          post.position.set(xOff, 0.6, zOff);
+          g.add(post);
+        }
       }
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "INFRASTRUCTURE",
+        title: "Traditional Wooden Arch Bridge",
+        description: "Handcrafted timber pedestrian bridge providing clean foot and bicycle transit across the river.",
+        stat1: "100%", stat1Label: "Sustainable Wood", stat2: "Zero", stat2Label: "Carbon Footprint"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
-    createBridge();
 
-    // Roads
-    const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(28, 0.02, 2.8), mat(0x1e293b));
+    createWoodenArchBridge(0, 0);
+
+    // Roadway
+    const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(28, 0.02, 2.6), mat(0x1e293b));
     mainRoad.position.set(0, 0.02, 0);
     scene.add(mainRoad);
 
-    // Helper: Canvas Text Signboard
-    function createSignboard(text, width = 2, height = 0.6) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 256;
-      canvas.height = 64;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, 256, 64);
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 6;
-      ctx.strokeRect(3, 3, 250, 58);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text, 128, 32);
+    // --- 5. MODERN COMMERCIAL GLASS BUILDING (IMAGE REFERENCE 1) ---
+    function createModernGlassBuilding(x, z) {
+      const g = new THREE.Group();
+      const orangeMat = mat(0xea580c); // Orange trim
 
-      const texture = new THREE.CanvasTexture(canvas);
-      const signGeo = new THREE.PlaneGeometry(width, height);
-      const signMat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
-      return new THREE.Mesh(signGeo, signMat);
-    }
+      // Main Glass Body with Grid Panes
+      const glassBody = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.8, 3.8), glassMat);
+      glassBody.position.y = 1.9;
+      glassBody.castShadow = true;
+      g.add(glassBody);
 
-    // --- 4. PHILIPPINE FLAG CREATION ---
-    function createPhilippineFlag() {
-      const flagGroup = new THREE.Group();
+      // Orange Frame Outer Casing
+      const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(5.0, 4.0, 0.4), orangeMat);
+      outerFrame.position.set(0, 2.0, 1.8);
+      g.add(outerFrame);
 
-      // Flagpole
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.5, 8), mat(0xd1d5db));
-      pole.position.y = 1.75;
-      flagGroup.add(pole);
+      // Central Entrance Overhang Canopy
+      const canopy = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.2, 1.2), orangeMat);
+      canopy.position.set(0, 1.2, 2.2);
+      g.add(canopy);
 
-      // Flag Canvas Texture
-      const canvas = document.createElement('canvas');
-      canvas.width = 300;
-      canvas.height = 150;
-      const ctx = canvas.getContext('2d');
+      // Round Topiary Trees (As seen in Reference 1)
+      const treeMat = mat(0x22c55e);
+      const trunkMat = mat(0x78350f);
+      for (let tx of [-2.8, 2.8]) {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 1.2), trunkMat);
+        trunk.position.set(tx, 0.6, 2.0);
+        g.add(trunk);
 
-      // Top Stripe (Blue)
-      ctx.fillStyle = '#0038a8';
-      ctx.fillRect(0, 0, 300, 75);
-
-      // Bottom Stripe (Red)
-      ctx.fillStyle = '#ce1126';
-      ctx.fillRect(0, 75, 300, 75);
-
-      // White Triangle
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(130, 75);
-      ctx.lineTo(0, 150);
-      ctx.closePath();
-      ctx.fill();
-
-      // Yellow Sun (Center)
-      ctx.fillStyle = '#fcd116';
-      ctx.beginPath();
-      ctx.arc(40, 75, 14, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 3 Stars
-      function drawStar(cx, cy) {
-        ctx.fillStyle = '#fcd116';
-        ctx.beginPath();
-        ctx.arc(cx, cy, 4, 0, Math.PI * 2);
-        ctx.fill();
+        const foliage = new THREE.Mesh(new THREE.SphereGeometry(0.7, 12, 12), treeMat);
+        foliage.position.set(tx, 1.5, 2.0);
+        g.add(foliage);
       }
-      drawStar(15, 25);
-      drawStar(15, 125);
-      drawStar(95, 75);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      const flagMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.4, 0.7),
-        new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide })
-      );
-      flagMesh.position.set(0.7, 3.0, 0);
-      flagGroup.add(flagMesh);
-
-      return flagGroup;
-    }
-
-    // --- 5. CIVIC BUILDINGS WITH LABELS ---
-    // A. SCHOOL WITH PH FLAG
-    function createSchool(x, z) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(5.0, 3.0, 3.5), mat(0xfef3c7));
-      body.position.y = 1.5;
-      body.castShadow = true;
-      g.add(body);
-
-      // Signboard
-      const sign = createSignboard("SCHOOL", 2.2, 0.6);
-      sign.position.set(0, 3.4, 1.76);
-      g.add(sign);
-
-      // Philippine Flag atop school
-      const phFlag = createPhilippineFlag();
-      phFlag.position.set(-1.8, 3.0, 0);
-      g.add(phFlag);
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "EDUCATION",
-        title: "Green Community School",
-        description: "Public school campus flying the Philippine Flag, powered by solar roof panels.",
-        stat1: "600", stat1Label: "Students", stat2: "A+", stat2Label: "Energy Rank"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    // B. HOSPITAL
-    function createHospital(x, z) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(4.8, 4.2, 3.8), mat(0xf8fafc));
-      body.position.y = 2.1;
-      body.castShadow = true;
-      g.add(body);
-
-      const sign = createSignboard("HOSPITAL", 2.4, 0.6);
-      sign.position.set(0, 4.5, 1.91);
-      g.add(sign);
-
-      const crossH = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.35, 0.1), mat(0xef4444));
-      crossH.position.set(0, 3.1, 1.91);
-      g.add(crossH);
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "HEALTHCARE",
-        title: "Eco City Hospital",
-        description: "Zero-emission hospital with 24/7 care and electric ambulances.",
-        stat1: "100%", stat1Label: "Solar Powered", stat2: "24/7", stat2Label: "Emergency"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    // C. CITY BANK
-    function createBank(x, z) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(3.5, 3.5, 3.0), mat(0x0284c7));
-      body.position.y = 1.75;
-      body.castShadow = true;
-      g.add(body);
-
-      // Gold Columns
-      for (let cx of [-1.2, 1.2]) {
-        const col = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 3.5, 8), mat(0xeab308, 0.2, 0.9));
-        col.position.set(cx, 1.75, 1.51);
-        g.add(col);
-      }
-
-      const sign = createSignboard("CITY BANK", 2.2, 0.6);
-      sign.position.set(0, 3.8, 1.52);
-      g.add(sign);
 
       g.position.set(x, 0, z);
 
       const meta = {
         tag: "COMMERCIAL",
-        title: "Central Green Bank",
-        description: "Financial hub funding local green sustainability initiatives and eco-projects.",
-        stat1: "100%", stat1Label: "Green Bonds", stat2: "$0", stat2Label: "Fossil Investments"
+        title: "Modern Glass Eco-Center",
+        description: "Energy-efficient commercial building featuring glass curtain walls and insulated orange framing.",
+        stat1: "-40%", stat1Label: "Energy Use", stat2: "A+", stat2Label: "Thermal Rating"
       };
       g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
 
-    // D. POLICE & FIRE STATIONS
-    function createPoliceStation(x, z) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.8, 2.5), mat(0x1e3a8a));
-      body.position.y = 1.4;
-      g.add(body);
+    createModernGlassBuilding(10, -8);
 
-      const sign = createSignboard("POLICE", 1.8, 0.5);
-      sign.position.set(0, 3.1, 1.26);
-      g.add(sign);
+    // --- 6. INTEGRATED ECO-FARM COMPLEX (IMAGE REFERENCE 2) ---
+    function createEcoFarmComplex(x, z) {
+      const farmGroup = new THREE.Group();
+      const barnMat = mat(0xd97706); // Red/Orange Barn
+      const roofMat = mat(0x475569); // Metallic roof
 
-      g.position.set(x, 0, z);
+      // 1. Red Barn Structure
+      const barn = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 2.8), barnMat);
+      barn.position.set(0, 1.25, 0);
+      barn.castShadow = true;
+      farmGroup.add(barn);
+
+      const barnRoof = new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.2, 4), roofMat);
+      barnRoof.rotation.y = Math.PI / 4;
+      barnRoof.position.set(0, 3.1, 0);
+      farmGroup.add(barnRoof);
+
+      // 2. Traditional Red Windmill with Animated Blades
+      const millBody = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.9, 3.5, 8), barnMat);
+      millBody.position.set(-3.2, 1.75, -1.0);
+      farmGroup.add(millBody);
+
+      const millCap = new THREE.Mesh(new THREE.ConeGeometry(0.8, 0.8, 8), mat(0xef4444));
+      millCap.position.set(-3.2, 3.9, -1.0);
+      farmGroup.add(millCap);
+
+      const rotorGroup = new THREE.Group();
+      rotorGroup.position.set(-3.2, 3.6, -0.4);
+
+      for (let i = 0; i < 4; i++) {
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.6, 0.02), mat(0xffffff));
+        blade.rotation.z = (i * Math.PI) / 2;
+        rotorGroup.add(blade);
+      }
+      farmGroup.add(rotorGroup);
+      windTurbines.push({ rotor: rotorGroup, speed: 1.8 });
+
+      // 3. Greenhouse Tunnel & Orchard Grid
+      const glassTunnel = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.8, 0.8, 2.5, 12, 1, false, 0, Math.PI),
+        glassMat
+      );
+      glassTunnel.rotation.z = Math.PI / 2;
+      glassTunnel.position.set(2.5, 0.4, -1.0);
+      farmGroup.add(glassTunnel);
+
+      // Dark Furrow Fields
+      const furrow = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 2.5), mat(0x3d2314));
+      furrow.position.set(2.5, 0.05, 1.8);
+      farmGroup.add(furrow);
+
+      farmGroup.position.set(x, 0, z);
 
       const meta = {
-        tag: "PUBLIC SAFETY",
-        title: "Eco Police Station",
-        description: "Operates electric patrol cars for community security.",
-        stat1: "100%", stat1Label: "EV Fleet", stat2: "< 3 min", stat2Label: "Response Time"
+        tag: "AGRICULTURE",
+        title: "Traditional Eco-Farm Complex",
+        description: "Combines classic farm architecture with clean energy windmills, greenhouses, and organic crop furrows.",
+        stat1: "100%", stat1Label: "Organic", stat2: "Zero", stat2Label: "Chemical Use"
       };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
+      farmGroup.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(farmGroup);
     }
 
-    function createFireStation(x, z) {
+    createEcoFarmComplex(-10, 8);
+
+    // --- 7. HOUSES WITH SOLAR PANELS (IMAGE REFERENCE 3) ---
+    function createSolarHouse(x, z) {
       const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.8, 2.8), mat(0x991b1b));
-      body.position.y = 1.4;
+
+      // White Body
+      const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.6, 2.2), mat(0xfff7ed));
+      body.position.y = 0.8;
+      body.castShadow = true;
       g.add(body);
 
-      const sign = createSignboard("FIRE DEPT", 2.0, 0.5);
-      sign.position.set(0, 3.1, 1.41);
-      g.add(sign);
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "PUBLIC SAFETY",
-        title: "Fire & Rescue Station",
-        description: "Equipped with zero-emission electric fire rescue trucks.",
-        stat1: "24/7", stat1Label: "Standby", stat2: "Zero", stat2Label: "Emissions"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    // Instantiate Municipal Infrastructure (East Bank)
-    createHospital(10, -10);
-    createSchool(10, -3);
-    createBank(10, 3);
-    createPoliceStation(10, 8);
-    createFireStation(10, 12);
-
-    // --- 6. HOUSES & RESIDENTIAL NEIGHBORHOOD (WEST BANK) ---
-    function createHouse(x, z) {
-      const g = new THREE.Group();
-      const walls = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.5, 2.0), mat(0xfff7ed));
-      walls.position.y = 0.75;
-      walls.castShadow = true;
-      g.add(walls);
-
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.7, 1.0, 4), mat(0x0f766e));
+      // Orange Pitched Roof
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.0, 1.1, 4), mat(0xea580c));
       roof.rotation.y = Math.PI / 4;
-      roof.position.y = 2.0;
+      roof.position.y = 2.15;
+      roof.castShadow = true;
       g.add(roof);
+
+      // Dark Blue Solar Panel Array mounted on roof slope
+      for (let px of [-0.5, 0.5]) {
+        const panel = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.04, 1.0), solarMat);
+        panel.rotation.x = Math.PI / 6;
+        panel.position.set(px, 2.1, 0.5);
+        g.add(panel);
+      }
 
       g.position.set(x, 0, z);
 
       const meta = {
         tag: "RESIDENTIAL",
-        title: "Sustainable Smart Home",
-        description: "Features rooftop solar panels and rainwater cisterns.",
-        stat1: "Net Zero", stat1Label: "Carbon", stat2: "85%", stat2Label: "Self-Sufficient"
+        title: "Solar-Roof Eco Home",
+        description: "Residential house fitted with angled rooftop photovoltaic solar panels producing clean household electricity.",
+        stat1: "350 kWh", stat1Label: "Monthly Solar Output", stat2: "100%", stat2Label: "Self-Powered"
       };
       g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
 
-    createHouse(-10, -11);
-    createHouse(-7, -11);
-    createHouse(-10, -8);
-    createHouse(-7, -8);
-    createHouse(-10, -5);
-    createHouse(-7, -5);
+    // Spawn Solar Homes in Residential Sector
+    createSolarHouse(-10, -11);
+    createSolarHouse(-7, -11);
+    createSolarHouse(-10, -7);
+    createSolarHouse(-7, -7);
 
-    // --- 7. VEGETATION & ANIMALS ---
-    function createTree(x, z, type = 'pine') {
-      const g = new THREE.Group();
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.18, 1.6, 6), mat(0x78350f));
-      trunk.position.y = 0.8;
-      trunk.castShadow = true;
-      g.add(trunk);
+    // --- 8. OTHER MUNICIPAL BUILDINGS & SCHOOL WITH PH FLAG ---
+    // Signboard Generator
+    function createSignboard(text, width = 2.2, height = 0.6) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 256, 64);
+      ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 6; ctx.strokeRect(3, 3, 250, 58);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(text, 128, 32);
 
-      let foliage;
-      if (type === 'pine') {
-        foliage = new THREE.Mesh(new THREE.ConeGeometry(0.9, 2.2, 5), mat(0x15803d));
-        foliage.position.y = 2.4;
-      } else {
-        foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(0.9, 0), mat(0x22c55e));
-        foliage.position.y = 2.1;
-      }
-      foliage.castShadow = true;
-      g.add(foliage);
-
-      g.position.set(x, 0, z);
-      scene.add(g);
+      const texture = new THREE.CanvasTexture(canvas);
+      return new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
     }
 
-    // Spawn Trees
-    createTree(-11, 2, 'pine');
-    createTree(-8, 2, 'round');
-    createTree(-11, 5, 'round');
-    createTree(-8, 5, 'pine');
-    createTree(4, -8, 'pine');
-    createTree(4, 8, 'round');
-
-    // Livestock Pasture with Cows
-    function createPasture(x, z) {
+    // Philippine Flag
+    function createPhilippineFlag() {
       const g = new THREE.Group();
-      const fence = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.4, 3.5), mat(0x78350f));
-      fence.position.y = 0.2;
-      g.add(fence);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.5, 8), mat(0xd1d5db));
+      pole.position.y = 1.75;
+      g.add(pole);
 
-      for (let i = 0; i < 2; i++) {
-        const cow = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.6), mat(0xf8fafc));
-        body.position.y = 0.7;
-        body.castShadow = true;
-        cow.add(body);
+      const canvas = document.createElement('canvas');
+      canvas.width = 300; canvas.height = 150;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0038a8'; ctx.fillRect(0, 0, 300, 75);
+      ctx.fillStyle = '#ce1126'; ctx.fillRect(0, 75, 300, 75);
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(130, 75); ctx.lineTo(0, 150); ctx.closePath(); ctx.fill();
 
-        const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.4), mat(0xf8fafc));
-        head.position.set(0.6, 0.9, 0);
-        head.castShadow = true;
-        cow.add(head);
-
-        cow.position.set((i - 0.5) * 2.0, 0, (i - 0.5) * 1.2);
-        g.add(cow);
-        grazingAnimals.push({ head: head, baseY: 0.9 });
-      }
-
-      g.position.set(x, 0, z);
-      scene.add(g);
+      const texture = new THREE.CanvasTexture(canvas);
+      const flagMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
+      flagMesh.position.set(0.7, 3.0, 0);
+      g.add(flagMesh);
+      return g;
     }
 
-    createPasture(-9, 9);
-
-    // --- 8. RENEWABLE WIND TURBINES & VEHICLES ---
-    function createWindTurbine(x, z) {
+    function createSchool(x, z) {
       const g = new THREE.Group();
-      const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.24, 6.5, 8), mat(0xe2e8f0));
-      tower.position.y = 3.25;
-      g.add(tower);
-
-      const nacelle = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.8), mat(0x0284c7));
-      nacelle.position.set(0, 6.5, 0.1);
-      g.add(nacelle);
-
-      const rotorGroup = new THREE.Group();
-      rotorGroup.position.set(0, 6.5, 0.5);
-
-      const bladeGeo = new THREE.BoxGeometry(0.12, 2.8, 0.02);
-      bladeGeo.translate(0, 1.4, 0);
-
-      for (let i = 0; i < 3; i++) {
-        const blade = new THREE.Mesh(bladeGeo, mat(0xffffff));
-        blade.rotation.z = (i * Math.PI * 2) / 3;
-        rotorGroup.add(blade);
-      }
-      g.add(rotorGroup);
-      g.position.set(x, 0, z);
-
-      windTurbines.push({ rotor: rotorGroup, speed: 2.5 });
-      scene.add(g);
-    }
-
-    createWindTurbine(-11, -13);
-
-    // Electric Vehicles
-    const trackPoints = [
-      new THREE.Vector3(-6, 0, -12),
-      new THREE.Vector3(-6, 0, 0),
-      new THREE.Vector3(6, 0, 0),
-      new THREE.Vector3(6, 0, 12),
-      new THREE.Vector3(6, 0, 0),
-      new THREE.Vector3(-6, 0, 0)
-    ];
-    const roadCurve = new THREE.CatmullRomCurve3(trackPoints, true);
-
-    function createEV(color) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 1.9), mat(color));
-      body.position.y = 0.45;
+      const body = new THREE.Mesh(new THREE.BoxGeometry(5.0, 3.0, 3.5), mat(0xfef3c7));
+      body.position.y = 1.5;
       g.add(body);
+
+      const sign = createSignboard("SCHOOL", 2.2, 0.6);
+      sign.position.set(0, 3.4, 1.76);
+      g.add(sign);
+
+      const phFlag = createPhilippineFlag();
+      phFlag.position.set(-1.8, 3.0, 0);
+      g.add(phFlag);
+
+      g.position.set(x, 0, z);
       scene.add(g);
-      animatedVehicles.push({ group: g, progress: Math.random(), speed: 0.06 });
     }
 
-    createEV(0x10b981);
-    createEV(0x3b82f6);
+    createSchool(10, 2);
 
-    // --- 9. WEATHER & DAY/NIGHT CONTROLS ---
+    // --- 9. ANIMATION LOOP & WEATHER ---
     const rainCount = 800;
     const rainGeo = new THREE.BufferGeometry();
     const rainPos = new Float32Array(rainCount * 3);
@@ -536,8 +408,7 @@
     }
 
     rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
-    const rainMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.12, transparent: true, opacity: 0.65 });
-    const rain = new THREE.Points(rainGeo, rainMat);
+    const rain = new THREE.Points(rainGeo, new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.12, transparent: true, opacity: 0.65 }));
     rain.visible = false;
     scene.add(rain);
 
@@ -557,22 +428,11 @@
         scene.background.lerpColors(sunsetSky, daySky, (sunHeight - 0.2) / 0.8);
         sunLight.intensity = 1.6 * sunHeight;
         ambientLight.intensity = 0.5;
-      } else if (sunHeight > -0.1) {
-        scene.background.lerpColors(nightSky, sunsetSky, (sunHeight + 0.1) / 0.3);
-        sunLight.intensity = 0.4;
-        ambientLight.intensity = 0.2;
       } else {
         scene.background.lerp(nightSky, 0.1);
         sunLight.intensity = 0.1;
         ambientLight.intensity = 0.08;
       }
-
-      let nightFactor = 0;
-      if (sunHeight < 0.1) {
-        nightFactor = Math.min(Math.max((0.1 - sunHeight) / 0.3, 0), 1);
-      }
-
-      nighttimeEmissives.forEach(m => m.emissiveIntensity = nightFactor * 2.5);
     }
 
     // Raycaster Info Cards
@@ -619,35 +479,18 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 10. ANIMATION LOOP ---
+    // --- 10. MAIN ANIMATION LOOP ---
     const clock = new THREE.Clock();
-    const lookTarget = new THREE.Vector3();
 
     function animate() {
       requestAnimationFrame(animate);
 
       const dt = clock.getDelta();
-      const time = clock.getElapsedTime();
 
       updateDayNightCycle(dt);
 
-      // Spin Turbines
+      // Rotate Windmill and Wind Turbines
       windTurbines.forEach(wt => { wt.rotor.rotation.z += wt.speed * dt; });
-
-      // Move Electric Cars
-      animatedVehicles.forEach(v => {
-        v.progress = (v.progress + dt * v.speed) % 1.0;
-        const pos = roadCurve.getPointAt(v.progress);
-        v.group.position.copy(pos);
-        const ahead = roadCurve.getPointAt((v.progress + 0.01) % 1.0);
-        lookTarget.set(ahead.x, pos.y, ahead.z);
-        v.group.lookAt(lookTarget);
-      });
-
-      // Grazing Animals
-      grazingAnimals.forEach(a => {
-        a.head.position.y = a.baseY + Math.sin(time * 2) * 0.04;
-      });
 
       // Animate Rain
       if (rain.visible) {
