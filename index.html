@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate Sustainable City 3D Diorama</title>
+  <title>Multi-Level Upcycled Sustainable City Diorama</title>
   <link rel="stylesheet" href="style.css">
   
   <!-- Three.js and OrbitControls -->
@@ -16,7 +16,7 @@
 
   <!-- UI Control Panel -->
   <div id="ui-panel">
-    <h1>Eco Megacity</h1>
+    <h1>Multi-Level Eco City</h1>
     <div class="control-group">
       <label for="speedSlider">Day/Night Speed <span id="speedVal">1.0x</span></label>
       <input type="range" id="speedSlider" min="0" max="3" step="0.1" value="1">
@@ -43,7 +43,7 @@
   </div>
 
   <script>
-    // --- 1. SCENE, CAMERA, & RENDERER SETUP ---
+    // --- 1. SCENE, CAMERA, & RENDERER ---
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb);
@@ -63,7 +63,7 @@
     controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 - 0.02;
 
-    // --- 2. LIGHTING & GLOBAL VARIABLES ---
+    // --- 2. LIGHTING & ATMOSPHERE ---
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
@@ -79,7 +79,7 @@
     sunLight.shadow.camera.bottom = -d;
     scene.add(sunLight);
 
-    // Arrays for dynamic animations and interactive raycasting
+    // Global Tracking Lists
     const interactiveObjects = [];
     const windTurbines = [];
     const animatedVehicles = [];
@@ -93,320 +93,263 @@
     const sunsetSky = new THREE.Color(0xff7f50);
     const nightSky = new THREE.Color(0x0a0a1a);
 
+    // Custom Materials for Upcycled Aesthetic
     const mat = (col, rough = 0.8, metal = 0.1) => 
       new THREE.MeshStandardMaterial({ color: col, flatShading: true, roughness: rough, metalness: metal });
 
-    // Emissive materials for night cycle
+    // Shiny Refractive CD / DVD Material for Upcycled Solar Panels
+    const cdSolarMat = new THREE.MeshStandardMaterial({
+      color: 0x1e1b4b,
+      metalness: 0.95,
+      roughness: 0.1,
+      flatShading: true
+    });
+
+    // Textured Living Wall & Moss Material
+    const mossMat = new THREE.MeshStandardMaterial({
+      color: 0x15803d,
+      roughness: 0.95,
+      flatShading: true
+    });
+
     const windowMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, emissive: 0xfde047, emissiveIntensity: 0 });
     nighttimeEmissives.push(windowMat);
 
     const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffaa33, emissiveIntensity: 0 });
     nighttimeEmissives.push(bulbMat);
 
-    // --- 3. TERRAIN, RIVER DELTA, & ELEVATION HILLS ---
-    const terrain = new THREE.Group();
+    // --- 3. TIER 1: SUNKEN & UNDERGROUND LEVEL ---
+    const terrainGroup = new THREE.Group();
 
-    // Base Earth Crust
+    // Deep Base Foundation
     const baseCrust = new THREE.Mesh(new THREE.BoxGeometry(32, 4, 32), mat(0x451a03));
-    baseCrust.position.y = -3;
-    terrain.add(baseCrust);
+    baseCrust.position.y = -3.0;
+    terrainGroup.add(baseCrust);
 
-    // West Bank (Residential & Agriculture)
+    // West Ground Bank
     const westBank = new THREE.Mesh(new THREE.BoxGeometry(13, 1, 32), mat(0x16a34a));
     westBank.position.set(-9.5, -0.5, 0);
     westBank.receiveShadow = true;
-    terrain.add(westBank);
+    terrainGroup.add(westBank);
 
-    // East Bank (Civic, Industrial & Energy)
+    // East Ground Bank
     const eastBank = new THREE.Mesh(new THREE.BoxGeometry(13, 1, 32), mat(0x16a34a));
     eastBank.position.set(9.5, -0.5, 0);
     eastBank.receiveShadow = true;
-    terrain.add(eastBank);
+    terrainGroup.add(eastBank);
 
-    // Terraced Hillside (North-West Plateau)
-    const hill1 = new THREE.Mesh(new THREE.BoxGeometry(8, 1.2, 10), mat(0x15803d));
-    hill1.position.set(-10, 0.6, -10);
+    // Sunken Riverbed Cutout
+    const river = new THREE.Mesh(
+      new THREE.BoxGeometry(6, 0.8, 32),
+      new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, transparent: true, opacity: 0.85 })
+    );
+    river.position.set(0, -0.6, 0);
+    terrainGroup.add(river);
+
+    // Sunken Wetland Water Treatment Area
+    const wetland = new THREE.Mesh(new THREE.BoxGeometry(5, 0.3, 5), mat(0x0d9488));
+    wetland.position.set(0, -0.45, 11);
+    terrainGroup.add(wetland);
+
+    // Underground Subway / Hyperloop Tunnel (Exposed Glass Tube)
+    const subwayTube = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 0.8, 28, 16),
+      new THREE.MeshPhysicalMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.4, transmission: 0.8 })
+    );
+    subwayTube.rotation.x = Math.PI / 2;
+    subwayTube.position.set(-9.5, -1.2, 0);
+    terrainGroup.add(subwayTube);
+
+    // --- TIER 2: GROUND LEVEL & PARKS ---
+    // Bike Lanes (Light Grey/Green) & Pedestrian Paths
+    const bikeLane = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.02, 28), mat(0x22c55e));
+    bikeLane.position.set(-5.0, 0.02, 0);
+    terrainGroup.add(bikeLane);
+
+    const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(28, 0.02, 2.8), mat(0x1e293b));
+    mainRoad.position.set(0, 0.02, 0);
+    terrainGroup.add(mainRoad);
+
+    // --- TIER 3: ELEVATED HILLS & RAISED PLAZAS ---
+    const hill1 = new THREE.Mesh(new THREE.BoxGeometry(8, 1.4, 10), mat(0x15803d));
+    hill1.position.set(-10, 0.7, -10);
     hill1.castShadow = true;
-    terrain.add(hill1);
+    terrainGroup.add(hill1);
 
     const hill2 = new THREE.Mesh(new THREE.BoxGeometry(5, 1.2, 6), mat(0x166534));
-    hill2.position.set(-11, 1.8, -11);
+    hill2.position.set(-11, 2.0, -11);
     hill2.castShadow = true;
-    terrain.add(hill2);
+    terrainGroup.add(hill2);
 
-    // River Channel & Wetlands
-    const riverMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, transparent: true, opacity: 0.85 });
-    const river = new THREE.Mesh(new THREE.BoxGeometry(6, 0.8, 32), riverMat);
-    river.position.set(0, -0.6, 0);
-    terrain.add(river);
+    scene.add(terrainGroup);
 
-    // Wetland Reed Basins (Natural Water Filtration)
-    const wetland = new THREE.Mesh(new THREE.BoxGeometry(5, 0.2, 4), mat(0x0d9488));
-    wetland.position.set(0, -0.3, 12);
-    terrain.add(wetland);
-
-    scene.add(terrain);
-
-    // --- 4. BRIDGES & ELEVATED LIGHT-RAIL TRANSIT ---
-    // Road Suspension Bridge
-    function createMainBridge() {
+    // --- TIER 4: HIGH-RISE & SKY-LEVEL CONNECTIVITY ---
+    // Elevated Monorail & Sky Bridges
+    function createMonorailTrack() {
       const g = new THREE.Group();
-      const deck = new THREE.Mesh(new THREE.BoxGeometry(7, 0.3, 3.5), mat(0x334155));
-      deck.position.set(0, 0.15, 0);
-      deck.castShadow = true;
-      g.add(deck);
+      for (let z = -12; z <= 12; z += 6) {
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 3.8, 8), mat(0x64748b));
+        pillar.position.set(-3, 1.9, z);
+        pillar.castShadow = true;
+        g.add(pillar);
+      }
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 28), mat(0x64748b));
+      beam.position.set(-3, 3.8, 0);
+      g.add(beam);
+      scene.add(g);
+    }
+    createMonorailTrack();
 
-      for (let zOff of [-1.6, 1.6]) {
-        const arch = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.12, 6, 16, Math.PI), mat(0xd97706));
-        arch.position.set(0, 0.2, zOff);
-        arch.rotation.x = Math.PI;
-        g.add(arch);
+    // Sky Bridge Connecting High-Rise Buildings
+    function createSkyBridge(x1, z1, x2, z2, height) {
+      const g = new THREE.Group();
+      const dist = Math.hypot(x2 - x1, z2 - z1);
+      const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, dist), mat(0x38bdf8, 0.2, 0.8));
+      bridge.position.set((x1 + x2) / 2, height, (z1 + z2) / 2);
+      bridge.lookAt(new THREE.Vector3(x2, height, z2));
+      g.add(bridge);
+      scene.add(g);
+    }
+    createSkyBridge(-10, -5, -6, -5, 6.5);
+
+    // --- 4. BUILDINGS WITH DEPTH & ARCHITECTURAL CUTOUTS ---
+    // A. SLANTED SOLAR SKYSCRAPER WITH CD SOLAR FACETS
+    function createSlantedSolarTower(x, z, h) {
+      const g = new THREE.Group();
+      
+      // Main Body
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3.5, h, 3.5), mat(0x334155));
+      body.position.y = h / 2;
+      body.castShadow = true;
+      g.add(body);
+
+      // Slanted Rooftop Cutout
+      const roofCap = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.1, 3.5), cdSolarMat);
+      roofCap.rotation.x = Math.PI / 6; // 30-degree tilt
+      roofCap.position.set(0, h + 0.3, 0);
+      g.add(roofCap);
+
+      // Facade Window Layering
+      for (let y = 1.5; y < h - 1; y += 1.4) {
+        const frame = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.2, 3.6), mat(0x64748b));
+        frame.position.y = y;
+        g.add(frame);
       }
 
+      g.position.set(x, 0, z);
+
       const meta = {
-        tag: "INFRASTRUCTURE",
-        title: "Arched Eco-Bridge",
-        description: "Connects the east civic sector with west residential zones, featuring smart traffic monitoring.",
-        stat1: "100%", stat1Label: "EV Compatible", stat2: "Zero", stat2Label: "Traffic Stalls"
+        tag: "ARCHITECTURE",
+        title: "Slanted Solar High-Rise",
+        description: "Features slanted rooftop CD solar facets and layered shading fins to reduce cooling loads.",
+        stat1: "520 kWh", stat1Label: "Daily Solar Gen", stat2: "A+", stat2Label: "Efficiency"
       };
       g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
-    createMainBridge();
 
-    // Elevated Light-Rail Tracks & Pillars
-    function createMonorailTrack() {
-      const trackGroup = new THREE.Group();
-      const trackMat = mat(0x64748b);
+    // B. SKY-GARDEN TOWER WITH INTEGRATED WIND TURBINE CUTOUT
+    function createSkyGardenTower(x, z, h) {
+      const g = new THREE.Group();
 
-      // Support Pillars
-      for (let z = -12; z <= 12; z += 6) {
-        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 3.5, 8), trackMat);
-        pillar.position.set(-3, 1.75, z);
-        pillar.castShadow = true;
-        trackGroup.add(pillar);
-      }
+      // Lower Section
+      const lower = new THREE.Mesh(new THREE.BoxGeometry(3.5, h * 0.4, 3.5), mat(0x1e293b));
+      lower.position.y = (h * 0.4) / 2;
+      g.add(lower);
 
-      // Continuous Monorail Beam
-      const beam = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.3, 28), trackMat);
-      beam.position.set(-3, 3.5, 0);
-      trackGroup.add(beam);
+      // Open-Air Sky Garden Cutout
+      const gardenFloor = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 3.2), mossMat);
+      gardenFloor.position.y = h * 0.4 + 0.1;
+      g.add(gardenFloor);
 
-      scene.add(trackGroup);
+      // Wind Turbine inside Cutout
+      const turbineMat = mat(0x0284c7);
+      const miniTurbine = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.2), turbineMat);
+      miniTurbine.position.set(0, h * 0.4 + 0.8, 0);
+      g.add(miniTurbine);
+
+      // Upper Section
+      const upper = new THREE.Mesh(new THREE.BoxGeometry(3.5, h * 0.5, 3.5), mat(0x1e293b));
+      upper.position.y = h * 0.45 + h * 0.5;
+      g.add(upper);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "GREEN SKYSCRAPER",
+        title: "Sky-Garden & Wind-Tunnel Tower",
+        description: "Open-air middle cutout channels urban wind currents through an internal turbine while providing park space.",
+        stat1: "1.2 MW", stat1Label: "Wind Output", stat2: "35%", stat2Label: "Green Area"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
     }
-    createMonorailTrack();
 
-    // --- 5. CIVIC & EMERGENCY DISTRICT (EAST BANK) ---
-    // A. REGIONAL ECO-HOSPITAL
+    createSlantedSolarTower(-10, -5, 8);
+    createSkyGardenTower(-6, -5, 10);
+
+    // --- 5. CIVIC BUILDINGS & RECYCLING FACILITY ---
+    // Regional Eco-Hospital
     function createHospital(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(5.0, 4.5, 4.0), mat(0xf8fafc));
       body.position.y = 2.25;
-      body.castShadow = true;
       g.add(body);
 
-      // Helipad
       const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 0.08, 16), mat(0x1e293b));
       pad.position.set(0, 4.55, 0);
       g.add(pad);
 
-      // Red Cross Emblem
       const crossH = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.35, 0.1), mat(0xef4444));
       crossH.position.set(0, 3.2, 2.01);
       g.add(crossH);
-      const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.2, 0.1), mat(0xef4444));
-      crossV.position.set(0, 3.2, 2.01);
-      g.add(crossV);
 
       g.position.set(x, 0, z);
-
       const meta = {
         tag: "HEALTHCARE",
         title: "Regional Eco-Hospital",
-        description: "Zero-carbon hospital with solar glass facades, geothermal climate control, and electric ambulance fleets.",
-        stat1: "100%", stat1Label: "Clean Energy", stat2: "24/7", stat2Label: "Emergency Care"
+        description: "Zero-carbon medical complex with helipad and electric ambulance dispatch.",
+        stat1: "100%", stat1Label: "Clean Power", stat2: "24/7", stat2Label: "Care"
       };
       g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
 
-    // B. EDUCATIONAL CAMPUS
-    function createSchool(x, z) {
+    // Dedicated Composting & Bottle-Cap Recycling Facility
+    function createRecyclingFacility(x, z) {
       const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(5.5, 3.0, 3.8), mat(0xfef3c7));
-      body.position.y = 1.5;
-      body.castShadow = true;
-      g.add(body);
+      const plant = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.8, 3.5), mat(0x475569));
+      plant.position.y = 1.4;
+      g.add(plant);
 
-      const tower = new THREE.Mesh(new THREE.BoxGeometry(1.2, 5.2, 1.2), mat(0xd97706));
-      tower.position.set(-2.0, 2.6, 1.2);
-      g.add(tower);
+      // Bottle-Cap Colored Sorting Bins
+      const colors = [0xef4444, 0x3b82f6, 0xeab308, 0x22c55e]; // Red, Blue, Yellow, Green
+      colors.forEach((col, i) => {
+        const capBin = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.5, 12), mat(col));
+        capBin.position.set(-1.5 + i * 1.0, 0.25, 2.2);
+        g.add(capBin);
+      });
 
       g.position.set(x, 0, z);
 
       const meta = {
-        tag: "EDUCATION",
-        title: "Green Educational Campus",
-        description: "Fully solar-powered school equipped with environmental science labs and outdoor botanical gardens.",
-        stat1: "750", stat1Label: "Students", stat2: "A+", stat2Label: "Energy Rating"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    // C. PUBLIC SAFETY HUB
-    function createSafetyHub(x, z) {
-      const g = new THREE.Group();
-      const police = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 2.8), mat(0x1e3a8a));
-      police.position.set(-1.8, 1.6, 0);
-      police.castShadow = true;
-      g.add(police);
-
-      const fire = new THREE.Mesh(new THREE.BoxGeometry(3.5, 3.0, 3.0), mat(0x991b1b));
-      fire.position.set(2.0, 1.5, 0);
-      fire.castShadow = true;
-      g.add(fire);
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "PUBLIC SAFETY",
-        title: "Police & Fire Rescue Center",
-        description: "Combined emergency response center operating zero-emission electric patrol cars and fire engines.",
-        stat1: "< 2 min", stat1Label: "Response Time", stat2: "100%", stat2Label: "EV Fleet"
+        tag: "WASTE MANAGEMENT",
+        title: "Bottle-Cap Recycling & Bio-Compost Hub",
+        description: "Processes sorted city waste into reusable plastics, compost, and biogas energy.",
+        stat1: "98%", stat1Label: "Recycled", stat2: "Zero", stat2Label: "Landfill Waste"
       };
       g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
 
     createHospital(10, -9);
-    createSchool(10, -2);
-    createSafetyHub(10, 5);
-
-    // --- 6. INDUSTRIAL & RECYCLING GRID ---
-    function createRecyclingFacility(x, z) {
-      const g = new THREE.Group();
-      const plant = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.8, 3.5), mat(0x475569));
-      plant.position.y = 1.4;
-      plant.castShadow = true;
-      g.add(plant);
-
-      for (let sx of [-1.5, 0, 1.5]) {
-        const silo = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 3.5, 12), mat(0x0284c7));
-        silo.position.set(sx, 1.75, -2.2);
-        g.add(silo);
-      }
-
-      const bioDome = new THREE.Mesh(new THREE.SphereGeometry(1.4, 12, 12, 0, Math.PI*2, 0, Math.PI/2), mat(0x22c55e, 0.2, 0.5));
-      bioDome.position.set(2.8, 0, 0);
-      g.add(bioDome);
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "RECYCLING & ENERGY",
-        title: "Waste-to-Energy & Biofuel Plant",
-        description: "Converts organic urban waste into biogas and electricity while achieving a 98% material recycling rate.",
-        stat1: "98%", stat1Label: "Waste Recycled", stat2: "Biogas", stat2Label: "Power Output"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
     createRecyclingFacility(10, 11);
 
-    // --- 7. VERTICAL FOREST SKYSCRAPERS & HOUSING (WEST BANK) ---
-    function createVerticalForestSkyscraper(x, z, height) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(3.5, height, 3.5), mat(0x334155));
-      body.position.y = height / 2;
-      body.castShadow = true;
-      g.add(body);
-
-      // Foliage Balconies
-      const foliageMat = mat(0x15803d);
-      for (let y = 1.5; y < height - 0.5; y += 1.2) {
-        for (let side of [-1.8, 1.8]) {
-          const balcony = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.3, 2.5), foliageMat);
-          balcony.position.set(side, y, 0);
-          g.add(balcony);
-        }
-      }
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "COMMERCIAL & HOUSING",
-        title: "Vertical Forest Skyscraper",
-        description: "High-density green skyscraper covered in over 2,000 plants to absorb CO2 and naturally cool indoor spaces.",
-        stat1: "-35%", stat1Label: "Cooling Demand", stat2: "2.4 Tons", stat2Label: "CO2 Absorbed/yr"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    createVerticalForestSkyscraper(-10, -5, 8);
-    createVerticalForestSkyscraper(-6, -5, 10);
-
-    // --- 8. URBAN AGRICULTURE & LIVESTOCK (WEST BANK) ---
-    function createHydroponicDome(x, z) {
-      const g = new THREE.Group();
-      const glassMat = new THREE.MeshPhysicalMaterial({
-        color: 0xe0f2fe, transparent: true, opacity: 0.6, roughness: 0.1, transmission: 0.85, side: THREE.DoubleSide
-      });
-
-      const dome = new THREE.Mesh(new THREE.SphereGeometry(2.5, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), glassMat);
-      g.add(dome);
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "AGRICULTURE",
-        title: "Hydroponic Climate Greenhouse",
-        description: "Produces pesticide-free crops using automated nutrient water loops and LED grow lighting.",
-        stat1: "15x", stat1Label: "Yield / m²", stat2: "-92%", stat2Label: "Water Saved"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    function createCropPlot(x, z) {
-      const g = new THREE.Group();
-      const soil = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.12, 4.2), mat(0x3d2314));
-      soil.position.y = 0.06;
-      g.add(soil);
-
-      const cropGeo = new THREE.DodecahedronGeometry(0.15, 0);
-      const plantMat = mat(0x22c55e);
-
-      for (let r = -1.6; r <= 1.6; r += 0.6) {
-        for (let c = -2.2; c <= 2.2; c += 0.5) {
-          const plant = new THREE.Mesh(cropGeo, plantMat);
-          plant.position.set(c, 0.22, r);
-          g.add(plant);
-        }
-      }
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "AGRICULTURE",
-        title: "Community Organic Crop Fields",
-        description: "Local agricultural plots growing organic vegetables for direct farm-to-table distribution.",
-        stat1: "100%", stat1Label: "Organic", stat2: "0 km", stat2Label: "Food Miles"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    createHydroponicDome(-10, 4);
-    createCropPlot(-10, 9);
-
-    // --- 9. RENEWABLE WIND & SOLAR PARKS ---
+    // --- 6. RENEWABLE WIND & HYPERLOOP TRANSIT ---
     function createWindTurbine(x, z) {
       const g = new THREE.Group();
       const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.24, 6.5, 8), mat(0xe2e8f0));
       tower.position.y = 3.25;
-      tower.castShadow = true;
       g.add(tower);
 
       const nacelle = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.8), mat(0x0284c7));
@@ -427,42 +370,25 @@
       g.add(rotorGroup);
       g.position.set(x, 0, z);
 
-      const meta = {
-        tag: "RENEWABLE ENERGY",
-        title: "Wind Turbine Generator",
-        description: "High-efficiency wind turbine feeding clean kinetic energy into the municipal power grid.",
-        stat1: "3.8 MW", stat1Label: "Capacity", stat2: "0%", stat2Label: "Carbon Output"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-
       windTurbines.push({ rotor: rotorGroup, speed: 2.5 });
+      scene.add(g);
     }
 
     createWindTurbine(-10.5, -11.5);
-    createWindTurbine(-13.5, -8.5);
 
-    // --- 10. VEHICLES, TRAIN & PEDESTRIANS ---
-    // Monorail Light-Rail Train
+    // Monorail Train Animation
     function createMonorailTrain() {
-      const trainGroup = new THREE.Group();
-      const carMat = mat(0x0284c7);
-      
-      const car1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 2.2), carMat);
-      car1.position.set(-3, 3.8, 0);
-      trainGroup.add(car1);
-
-      const car2 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 2.2), carMat);
-      car2.position.set(-3, 3.8, -2.4);
-      trainGroup.add(car2);
-
-      scene.add(trainGroup);
-
-      trains.push({ group: trainGroup, zPos: -10, speed: 6.0 });
+      const g = new THREE.Group();
+      const trainMat = mat(0x0284c7);
+      const car = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 2.2), trainMat);
+      car.position.set(-3, 4.1, 0);
+      g.add(car);
+      scene.add(g);
+      trains.push({ group: g, zPos: -12, speed: 6.0 });
     }
     createMonorailTrain();
 
-    // Electric Cars
+    // Electric Vehicles
     const trackPoints = [
       new THREE.Vector3(-6, 0, -12),
       new THREE.Vector3(-6, 0, 0),
@@ -477,37 +403,14 @@
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 1.9), mat(color));
       body.position.y = 0.45;
-      body.castShadow = true;
       g.add(body);
-
       scene.add(g);
       animatedVehicles.push({ group: g, progress: Math.random(), speed: 0.06 });
     }
 
     createEV(0x10b981);
-    createEV(0x3b82f6);
 
-    // Walking Citizens
-    function createPedestrian(x, z) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.45, 0.2), mat(0xef4444));
-      body.position.y = 0.5;
-      g.add(body);
-
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.18), mat(0xfde047));
-      head.position.y = 0.85;
-      g.add(head);
-
-      g.position.set(x, 0, z);
-      scene.add(g);
-
-      pedestrians.push({ group: g, dir: 1, speed: 0.7 });
-    }
-
-    createPedestrian(-4.5, 3);
-    createPedestrian(4.5, -3);
-
-    // --- 11. WEATHER (RAIN) SYSTEM ---
+    // --- 7. WEATHER (RAIN) SYSTEM ---
     const rainCount = 1000;
     const rainGeo = new THREE.BufferGeometry();
     const rainPos = new Float32Array(rainCount * 3);
@@ -524,7 +427,7 @@
     rain.visible = false;
     scene.add(rain);
 
-    // --- 12. DAY/NIGHT & CONTROLS ---
+    // --- 8. DAY/NIGHT CYCLE LOGIC ---
     let dayTime = 0;
     let timeSpeedMultiplier = 1.0;
     const dayDuration = 30;
@@ -560,7 +463,7 @@
       nighttimeLights.forEach(l => l.intensity = nightFactor * 4.0);
     }
 
-    // Raycasting for Info Cards
+    // Raycasting Listener for Info Cards
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     const infoCard = document.getElementById('info-card');
@@ -604,7 +507,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 13. ANIMATION LOOP ---
+    // --- 9. ANIMATION LOOP ---
     const clock = new THREE.Clock();
     const lookTarget = new THREE.Vector3();
 
@@ -615,10 +518,10 @@
 
       updateDayNightCycle(dt);
 
-      // Spin Turbines
+      // Rotate Wind Turbines
       windTurbines.forEach(wt => { wt.rotor.rotation.z += wt.speed * dt; });
 
-      // Move Electric Cars
+      // Move Vehicles
       animatedVehicles.forEach(v => {
         v.progress = (v.progress + dt * v.speed) % 1.0;
         const pos = roadCurve.getPointAt(v.progress);
@@ -633,12 +536,6 @@
         t.zPos += t.speed * dt;
         if (t.zPos > 12) t.zPos = -12;
         t.group.position.z = t.zPos;
-      });
-
-      // Walk Pedestrians
-      pedestrians.forEach(p => {
-        p.group.position.z += p.speed * dt * p.dir;
-        if (Math.abs(p.group.position.z) > 12) p.dir *= -1;
       });
 
       // Animate Rain
