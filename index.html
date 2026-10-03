@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reference-Matched Sustainable City Diorama</title>
+  <title>Sustainable City Diorama</title>
   <link rel="stylesheet" href="style.css">
   
   <!-- Three.js and OrbitControls -->
@@ -21,7 +21,7 @@
       <label for="speedSlider">Day/Night Speed <span id="speedVal">1.0x</span></label>
       <input type="range" id="speedSlider" min="0" max="3" step="0.1" value="1">
     </div>
-    <button id="toggleRain" class="btn">Toggle Rain</button>
+    <button id="toggleRain" class="btn">Toggle Weather</button>
   </div>
 
   <!-- Interactive Info Card -->
@@ -43,7 +43,7 @@
   </div>
 
   <script>
-    // --- 1. SCENE, CAMERA, & RENDERER SETUP ---
+    // --- 1. SETUP SCENE, CAMERA, & RENDERER ---
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb);
@@ -63,7 +63,7 @@
     controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 - 0.02;
 
-    // --- 2. LIGHTING & GLOBAL ARRAYS ---
+    // --- 2. LIGHTING SETUP ---
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
@@ -79,12 +79,11 @@
     sunLight.shadow.camera.bottom = -d;
     scene.add(sunLight);
 
+    // Global Tracking Lists
     const interactiveObjects = [];
     const windTurbines = [];
     const animatedVehicles = [];
-    const grazingAnimals = [];
     const nighttimeEmissives = [];
-    const nighttimeLights = [];
 
     const daySky = new THREE.Color(0x87ceeb);
     const sunsetSky = new THREE.Color(0xff7f50);
@@ -93,9 +92,9 @@
     const mat = (col, rough = 0.8, metal = 0.1) => 
       new THREE.MeshStandardMaterial({ color: col, flatShading: true, roughness: rough, metalness: metal });
 
-    // Glass Material for Modern Building
-    const glassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x38bdf8,
+    // RED-TINTED GLASS MATERIAL FOR HOSPITAL WINDOWS
+    const redGlassMat = new THREE.MeshPhysicalMaterial({
+      color: 0xef4444,
       metalness: 0.1,
       roughness: 0.1,
       transparent: true,
@@ -103,7 +102,7 @@
       transmission: 0.8
     });
 
-    // Dark Blue Solar Panel Material (Image Reference 3)
+    // Dark Blue Solar Panel Material
     const solarMat = new THREE.MeshStandardMaterial({
       color: 0x1e1b4b,
       metalness: 0.9,
@@ -137,26 +136,22 @@
 
     scene.add(terrain);
 
-    // --- 4. WOODEN ARCH PEDESTRIAN BRIDGE (IMAGE REFERENCE 4) ---
+    // Wooden Arch Bridge
     function createWoodenArchBridge(x, z) {
       const g = new THREE.Group();
       const woodMat = mat(0x92400e, 0.9, 0.05);
 
-      // Curved Deck
-      const deckGeo = new THREE.BoxGeometry(6.5, 0.25, 2.6);
-      const deck = new THREE.Mesh(deckGeo, woodMat);
+      const deck = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.25, 2.6), woodMat);
       deck.position.set(0, 0.2, 0);
       deck.castShadow = true;
       g.add(deck);
 
-      // Curved Arched Handrails
       for (let zOff of [-1.2, 1.2]) {
         const arch = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.1, 8, 16, Math.PI), woodMat);
         arch.rotation.x = Math.PI;
         arch.position.set(0, 0.3, zOff);
         g.add(arch);
 
-        // Baluster Posts
         for (let xOff = -2.5; xOff <= 2.5; xOff += 1.0) {
           const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.8), woodMat);
           post.position.set(xOff, 0.6, zOff);
@@ -169,178 +164,19 @@
       const meta = {
         tag: "INFRASTRUCTURE",
         title: "Traditional Wooden Arch Bridge",
-        description: "Handcrafted timber pedestrian bridge providing clean foot and bicycle transit across the river.",
-        stat1: "100%", stat1Label: "Sustainable Wood", stat2: "Zero", stat2Label: "Carbon Footprint"
+        description: "Pedestrian & bike transit bridge connecting city banks.",
+        stat1: "100%", stat1Label: "Sustainable Timber", stat2: "Zero", stat2Label: "Emissions"
       };
       g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
-
     createWoodenArchBridge(0, 0);
 
-    // Roadway
     const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(28, 0.02, 2.6), mat(0x1e293b));
     mainRoad.position.set(0, 0.02, 0);
     scene.add(mainRoad);
 
-    // --- 5. MODERN COMMERCIAL GLASS BUILDING (IMAGE REFERENCE 1) ---
-    function createModernGlassBuilding(x, z) {
-      const g = new THREE.Group();
-      const orangeMat = mat(0xea580c); // Orange trim
-
-      // Main Glass Body with Grid Panes
-      const glassBody = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.8, 3.8), glassMat);
-      glassBody.position.y = 1.9;
-      glassBody.castShadow = true;
-      g.add(glassBody);
-
-      // Orange Frame Outer Casing
-      const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(5.0, 4.0, 0.4), orangeMat);
-      outerFrame.position.set(0, 2.0, 1.8);
-      g.add(outerFrame);
-
-      // Central Entrance Overhang Canopy
-      const canopy = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.2, 1.2), orangeMat);
-      canopy.position.set(0, 1.2, 2.2);
-      g.add(canopy);
-
-      // Round Topiary Trees (As seen in Reference 1)
-      const treeMat = mat(0x22c55e);
-      const trunkMat = mat(0x78350f);
-      for (let tx of [-2.8, 2.8]) {
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 1.2), trunkMat);
-        trunk.position.set(tx, 0.6, 2.0);
-        g.add(trunk);
-
-        const foliage = new THREE.Mesh(new THREE.SphereGeometry(0.7, 12, 12), treeMat);
-        foliage.position.set(tx, 1.5, 2.0);
-        g.add(foliage);
-      }
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "COMMERCIAL",
-        title: "Modern Glass Eco-Center",
-        description: "Energy-efficient commercial building featuring glass curtain walls and insulated orange framing.",
-        stat1: "-40%", stat1Label: "Energy Use", stat2: "A+", stat2Label: "Thermal Rating"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    createModernGlassBuilding(10, -8);
-
-    // --- 6. INTEGRATED ECO-FARM COMPLEX (IMAGE REFERENCE 2) ---
-    function createEcoFarmComplex(x, z) {
-      const farmGroup = new THREE.Group();
-      const barnMat = mat(0xd97706); // Red/Orange Barn
-      const roofMat = mat(0x475569); // Metallic roof
-
-      // 1. Red Barn Structure
-      const barn = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.5, 2.8), barnMat);
-      barn.position.set(0, 1.25, 0);
-      barn.castShadow = true;
-      farmGroup.add(barn);
-
-      const barnRoof = new THREE.Mesh(new THREE.ConeGeometry(2.6, 1.2, 4), roofMat);
-      barnRoof.rotation.y = Math.PI / 4;
-      barnRoof.position.set(0, 3.1, 0);
-      farmGroup.add(barnRoof);
-
-      // 2. Traditional Red Windmill with Animated Blades
-      const millBody = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.9, 3.5, 8), barnMat);
-      millBody.position.set(-3.2, 1.75, -1.0);
-      farmGroup.add(millBody);
-
-      const millCap = new THREE.Mesh(new THREE.ConeGeometry(0.8, 0.8, 8), mat(0xef4444));
-      millCap.position.set(-3.2, 3.9, -1.0);
-      farmGroup.add(millCap);
-
-      const rotorGroup = new THREE.Group();
-      rotorGroup.position.set(-3.2, 3.6, -0.4);
-
-      for (let i = 0; i < 4; i++) {
-        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.6, 0.02), mat(0xffffff));
-        blade.rotation.z = (i * Math.PI) / 2;
-        rotorGroup.add(blade);
-      }
-      farmGroup.add(rotorGroup);
-      windTurbines.push({ rotor: rotorGroup, speed: 1.8 });
-
-      // 3. Greenhouse Tunnel & Orchard Grid
-      const glassTunnel = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.8, 0.8, 2.5, 12, 1, false, 0, Math.PI),
-        glassMat
-      );
-      glassTunnel.rotation.z = Math.PI / 2;
-      glassTunnel.position.set(2.5, 0.4, -1.0);
-      farmGroup.add(glassTunnel);
-
-      // Dark Furrow Fields
-      const furrow = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 2.5), mat(0x3d2314));
-      furrow.position.set(2.5, 0.05, 1.8);
-      farmGroup.add(furrow);
-
-      farmGroup.position.set(x, 0, z);
-
-      const meta = {
-        tag: "AGRICULTURE",
-        title: "Traditional Eco-Farm Complex",
-        description: "Combines classic farm architecture with clean energy windmills, greenhouses, and organic crop furrows.",
-        stat1: "100%", stat1Label: "Organic", stat2: "Zero", stat2Label: "Chemical Use"
-      };
-      farmGroup.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(farmGroup);
-    }
-
-    createEcoFarmComplex(-10, 8);
-
-    // --- 7. HOUSES WITH SOLAR PANELS (IMAGE REFERENCE 3) ---
-    function createSolarHouse(x, z) {
-      const g = new THREE.Group();
-
-      // White Body
-      const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.6, 2.2), mat(0xfff7ed));
-      body.position.y = 0.8;
-      body.castShadow = true;
-      g.add(body);
-
-      // Orange Pitched Roof
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.0, 1.1, 4), mat(0xea580c));
-      roof.rotation.y = Math.PI / 4;
-      roof.position.y = 2.15;
-      roof.castShadow = true;
-      g.add(roof);
-
-      // Dark Blue Solar Panel Array mounted on roof slope
-      for (let px of [-0.5, 0.5]) {
-        const panel = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.04, 1.0), solarMat);
-        panel.rotation.x = Math.PI / 6;
-        panel.position.set(px, 2.1, 0.5);
-        g.add(panel);
-      }
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "RESIDENTIAL",
-        title: "Solar-Roof Eco Home",
-        description: "Residential house fitted with angled rooftop photovoltaic solar panels producing clean household electricity.",
-        stat1: "350 kWh", stat1Label: "Monthly Solar Output", stat2: "100%", stat2Label: "Self-Powered"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    // Spawn Solar Homes in Residential Sector
-    createSolarHouse(-10, -11);
-    createSolarHouse(-7, -11);
-    createSolarHouse(-10, -7);
-    createSolarHouse(-7, -7);
-
-    // --- 8. OTHER MUNICIPAL BUILDINGS & SCHOOL WITH PH FLAG ---
-    // Signboard Generator
+    // --- 4. SIGNBOARDS & PHILIPPINE FLAG ---
     function createSignboard(text, width = 2.2, height = 0.6) {
       const canvas = document.createElement('canvas');
       canvas.width = 256; canvas.height = 64;
@@ -355,7 +191,6 @@
       return new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
     }
 
-    // Philippine Flag
     function createPhilippineFlag() {
       const g = new THREE.Group();
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.5, 8), mat(0xd1d5db));
@@ -369,6 +204,10 @@
       ctx.fillStyle = '#ce1126'; ctx.fillRect(0, 75, 300, 75);
       ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(130, 75); ctx.lineTo(0, 150); ctx.closePath(); ctx.fill();
 
+      // Yellow Sun
+      ctx.fillStyle = '#fcd116';
+      ctx.beginPath(); ctx.arc(40, 75, 14, 0, Math.PI * 2); ctx.fill();
+
       const texture = new THREE.CanvasTexture(canvas);
       const flagMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
       flagMesh.position.set(0.7, 3.0, 0);
@@ -376,6 +215,46 @@
       return g;
     }
 
+    // --- 5. CIVIC BUILDINGS ---
+    // A. HOSPITAL WITH RED-TINTED WINDOWS
+    function createHospital(x, z) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(4.8, 4.2, 3.8), mat(0xf8fafc));
+      body.position.y = 2.1;
+      body.castShadow = true;
+      g.add(body);
+
+      // Red-tinted window panes on facade
+      const winGeo = new THREE.PlaneGeometry(0.8, 1.0);
+      for (let y = 1.2; y <= 3.2; y += 1.0) {
+        for (let xOff of [-1.5, -0.5, 0.5, 1.5]) {
+          const win = new THREE.Mesh(winGeo, redGlassMat);
+          win.position.set(xOff, y, 1.91);
+          g.add(win);
+        }
+      }
+
+      const sign = createSignboard("HOSPITAL", 2.4, 0.6);
+      sign.position.set(0, 4.5, 1.91);
+      g.add(sign);
+
+      const crossH = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.35, 0.1), mat(0xef4444));
+      crossH.position.set(0, 3.8, 1.92);
+      g.add(crossH);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "HEALTHCARE",
+        title: "Regional Eco-Hospital",
+        description: "Zero-carbon hospital with solar energy and red-tinted solar windows.",
+        stat1: "100%", stat1Label: "Solar Powered", stat2: "24/7", stat2Label: "Emergency"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
+    }
+
+    // B. SCHOOL WITH PHILIPPINE FLAG
     function createSchool(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(5.0, 3.0, 3.5), mat(0xfef3c7));
@@ -391,12 +270,219 @@
       g.add(phFlag);
 
       g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "EDUCATION",
+        title: "Green Community School",
+        description: "Public school campus flying the Philippine Flag.",
+        stat1: "600", stat1Label: "Students", stat2: "A+", stat2Label: "Energy Rank"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
 
-    createSchool(10, 2);
+    // C. POLICE & FIRE STATIONS
+    function createPoliceStation(x, z) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.8, 2.5), mat(0x1e3a8a));
+      body.position.y = 1.4;
+      g.add(body);
 
-    // --- 9. ANIMATION LOOP & WEATHER ---
+      const sign = createSignboard("POLICE", 1.8, 0.5);
+      sign.position.set(0, 3.1, 1.26);
+      g.add(sign);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "PUBLIC SAFETY",
+        title: "Eco Police Station",
+        description: "Operates electric patrol cars for community security.",
+        stat1: "100%", stat1Label: "EV Fleet", stat2: "< 3 min", stat2Label: "Response Time"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
+    }
+
+    function createFireStation(x, z) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.8, 2.8), mat(0x991b1b));
+      body.position.y = 1.4;
+      g.add(body);
+
+      const sign = createSignboard("FIRE DEPT", 2.0, 0.5);
+      sign.position.set(0, 3.1, 1.41);
+      g.add(sign);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "PUBLIC SAFETY",
+        title: "Fire & Rescue Station",
+        description: "Equipped with zero-emission electric fire trucks.",
+        stat1: "24/7", stat1Label: "Standby", stat2: "Zero", stat2Label: "Emissions"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
+    }
+
+    createHospital(10, -10);
+    createSchool(10, -3);
+    createPoliceStation(10, 5);
+    createFireStation(10, 9);
+
+    // --- 6. EXACTLY 7 RESIDENTIAL HOUSES WITH SOLAR PANELS ---
+    function createSolarHouse(x, z) {
+      const g = new THREE.Group();
+
+      const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.5, 2.0), mat(0xfff7ed));
+      body.position.y = 0.75;
+      body.castShadow = true;
+      g.add(body);
+
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.8, 1.0, 4), mat(0xea580c));
+      roof.rotation.y = Math.PI / 4;
+      roof.position.y = 2.0;
+      roof.castShadow = true;
+      g.add(roof);
+
+      // Rooftop Solar Panel
+      const panel = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.04, 0.9), solarMat);
+      panel.rotation.x = Math.PI / 6;
+      panel.position.set(0, 2.0, 0.4);
+      g.add(panel);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "RESIDENTIAL",
+        title: "Solar Smart House",
+        description: "House equipped with rooftop solar photovoltaic panels.",
+        stat1: "Net Zero", stat1Label: "Carbon", stat2: "100%", stat2Label: "Self-Powered"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
+    }
+
+    // 7 Solar Houses
+    const houseCoords = [
+      [-10, -12], [-7, -12],
+      [-10, -9],  [-7, -9],
+      [-10, -6],  [-7, -6],
+      [-10, -3]
+    ];
+    houseCoords.forEach(([hx, hz]) => createSolarHouse(hx, hz));
+
+    // --- 7. ECO FARM COMPLEX ---
+    function createFarm(x, z) {
+      const g = new THREE.Group();
+      const barn = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.2, 2.6), mat(0xd97706));
+      barn.position.set(0, 1.1, 0);
+      g.add(barn);
+
+      // Windmill
+      const mill = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.8, 3.2, 8), mat(0xd97706));
+      mill.position.set(-3, 1.6, 0);
+      g.add(mill);
+
+      const rotorGroup = new THREE.Group();
+      rotorGroup.position.set(-3, 3.2, 0.5);
+
+      for (let i = 0; i < 4; i++) {
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 0.02), mat(0xffffff));
+        blade.rotation.z = (i * Math.PI) / 2;
+        rotorGroup.add(blade);
+      }
+      g.add(rotorGroup);
+      windTurbines.push({ rotor: rotorGroup, speed: 2.0 });
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+    createFarm(-10, 8);
+
+    // --- 8. MANY TREES, BUSHES, & FLOWERS ---
+    function createTree(x, z, type = 'pine') {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 1.5, 6), mat(0x78350f));
+      trunk.position.y = 0.75;
+      trunk.castShadow = true;
+      g.add(trunk);
+
+      let foliage;
+      if (type === 'pine') {
+        foliage = new THREE.Mesh(new THREE.ConeGeometry(0.8, 2.0, 5), mat(0x15803d));
+        foliage.position.y = 2.2;
+      } else {
+        foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(0.8, 0), mat(0x22c55e));
+        foliage.position.y = 2.0;
+      }
+      foliage.castShadow = true;
+      g.add(foliage);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+
+    // Flower Bushes Function
+    function createFlowerBush(x, z, colorHex) {
+      const g = new THREE.Group();
+      const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(0.35, 0), mat(0x16a34a));
+      bush.position.y = 0.35;
+      g.add(bush);
+
+      // Flowers
+      const flowerMat = mat(colorHex);
+      for (let i = 0; i < 4; i++) {
+        const blossom = new THREE.Mesh(new THREE.DodecahedronGeometry(0.08, 0), flowerMat);
+        const a = (i * Math.PI * 2) / 4;
+        blossom.position.set(Math.cos(a) * 0.25, 0.45, Math.sin(a) * 0.25);
+        g.add(blossom);
+      }
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+
+    // Dense Forest Coverage
+    const treePositions = [
+      [-12, 1, 'pine'], [-8, 1, 'leafy'], [-12, 4, 'leafy'], [-8, 4, 'pine'],
+      [-5, -12, 'pine'], [-5, -8, 'leafy'], [-5, -4, 'pine'],
+      [4, -12, 'pine'], [4, -6, 'leafy'], [4, 2, 'pine'], [4, 8, 'leafy'], [4, 12, 'pine']
+    ];
+    treePositions.forEach(([tx, tz, type]) => createTree(tx, tz, type));
+
+    // Flower Bushes
+    const flowerPositions = [
+      [-5, 2, 0xef4444], [-4, 2, 0xec4899], [-5, 4, 0xeab308],
+      [5, -2, 0xef4444], [6, -2, 0xec4899], [5, 4, 0xeab308], [6, 4, 0xef4444]
+    ];
+    flowerPositions.forEach(([fx, fz, col]) => createFlowerBush(fx, fz, col));
+
+    // --- 9. ELECTRIC VEHICLES ---
+    const trackPoints = [
+      new THREE.Vector3(-6, 0, -12),
+      new THREE.Vector3(-6, 0, 0),
+      new THREE.Vector3(6, 0, 0),
+      new THREE.Vector3(6, 0, 12),
+      new THREE.Vector3(6, 0, 0),
+      new THREE.Vector3(-6, 0, 0)
+    ];
+    const roadCurve = new THREE.CatmullRomCurve3(trackPoints, true);
+
+    function createEV(color) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 1.9), mat(color));
+      body.position.y = 0.45;
+      g.add(body);
+      scene.add(g);
+      animatedVehicles.push({ group: g, progress: Math.random(), speed: 0.06 });
+    }
+
+    createEV(0x10b981);
+    createEV(0x3b82f6);
+
+    // --- 10. WEATHER & ANIMATION ---
     const rainCount = 800;
     const rainGeo = new THREE.BufferGeometry();
     const rainPos = new Float32Array(rainCount * 3);
@@ -479,8 +565,9 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // --- 10. MAIN ANIMATION LOOP ---
+    // --- 11. MAIN ANIMATION LOOP ---
     const clock = new THREE.Clock();
+    const lookTarget = new THREE.Vector3();
 
     function animate() {
       requestAnimationFrame(animate);
@@ -489,8 +576,18 @@
 
       updateDayNightCycle(dt);
 
-      // Rotate Windmill and Wind Turbines
+      // Rotate Windmill
       windTurbines.forEach(wt => { wt.rotor.rotation.z += wt.speed * dt; });
+
+      // Move Electric Cars
+      animatedVehicles.forEach(v => {
+        v.progress = (v.progress + dt * v.speed) % 1.0;
+        const pos = roadCurve.getPointAt(v.progress);
+        v.group.position.copy(pos);
+        const ahead = roadCurve.getPointAt((v.progress + 0.01) % 1.0);
+        lookTarget.set(ahead.x, pos.y, ahead.z);
+        v.group.lookAt(lookTarget);
+      });
 
       // Animate Rain
       if (rain.visible) {
