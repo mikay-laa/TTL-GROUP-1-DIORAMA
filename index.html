@@ -84,6 +84,8 @@
     const windTurbines = [];
     const animatedVehicles = [];
     const nighttimeEmissives = [];
+    const nighttimeLights = [];
+    const pedestrians = [];
 
     const daySky = new THREE.Color(0x87ceeb);
     const sunsetSky = new THREE.Color(0xff7f50);
@@ -109,6 +111,14 @@
       roughness: 0.1,
       flatShading: true
     });
+
+    // Streetlight Bulb Material (Glows at Night)
+    const streetlightBulbMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffaa33,
+      emissiveIntensity: 0
+    });
+    nighttimeEmissives.push(streetlightBulbMat);
 
     // --- 3. TERRAIN & RIVER ---
     const terrain = new THREE.Group();
@@ -175,6 +185,74 @@
     const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(28, 0.02, 2.6), mat(0x1e293b));
     mainRoad.position.set(0, 0.02, 0);
     scene.add(mainRoad);
+
+    // --- STREETLIGHTS THAT LIGHT UP AT NIGHT ---
+    function createStreetlight(x, z) {
+      const g = new THREE.Group();
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 8), mat(0x334155));
+      pole.position.y = 1.1;
+      g.add(pole);
+
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), streetlightBulbMat);
+      bulb.position.y = 2.2;
+      g.add(bulb);
+
+      // Nighttime PointLight Source
+      const pLight = new THREE.PointLight(0xffaa33, 0, 7, 2);
+      pLight.position.y = 2.1;
+      g.add(pLight);
+      nighttimeLights.push(pLight);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+
+    // Place streetlights along main roads
+    createStreetlight(-5, 2);
+    createStreetlight(-5, -2);
+    createStreetlight(5, 2);
+    createStreetlight(5, -2);
+    createStreetlight(-5, 10);
+    createStreetlight(5, 10);
+
+    // --- PARKING LOT FOR CARS (PREVENTS DRIVING INTO HOUSES) ---
+    function createParkingLot(x, z) {
+      const g = new THREE.Group();
+
+      // Asphalt Pad
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.02, 6.0), mat(0x334155));
+      pad.position.y = 0.02;
+      pad.receiveShadow = true;
+      g.add(pad);
+
+      // Parking Space White Lines
+      for (let pz of [-1.8, 0, 1.8]) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.03, 0.1), mat(0xffffff));
+        line.position.set(0, 0.025, pz);
+        g.add(line);
+      }
+
+      // Parked Electric Vehicles
+      const parkedEV1 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 1.9), mat(0x10b981));
+      parkedEV1.position.set(-0.8, 0.3, -0.9);
+      g.add(parkedEV1);
+
+      const parkedEV2 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 1.9), mat(0x3b82f6));
+      parkedEV2.position.set(0.8, 0.3, 0.9);
+      g.add(parkedEV2);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "TRANSPORT",
+        title: "EV Smart Parking Hub",
+        description: "Dedicated parking lot equipped with electric vehicle charging stations.",
+        stat1: "100%", stat1Label: "EV Charging", stat2: "Zero", stat2Label: "Street Parking"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
+    }
+    createParkingLot(-5, -7);
 
     // --- 4. SIGNBOARDS & PHILIPPINE FLAG ---
     function createSignboard(text, width = 2.2, height = 0.6) {
@@ -326,10 +404,89 @@
       scene.add(g);
     }
 
+    // D. CATHOLIC CHURCH
+    function createCatholicChurch(x, z) {
+      const g = new THREE.Group();
+      
+      // Main Nave Body
+      const nave = new THREE.Mesh(new THREE.BoxGeometry(3.8, 3.2, 4.5), mat(0xf1f5f9));
+      nave.position.y = 1.6;
+      nave.castShadow = true;
+      g.add(nave);
+
+      // Pitched Roof
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.8, 1.2, 4), mat(0x7f1d1d));
+      roof.rotation.y = Math.PI / 4;
+      roof.position.y = 3.8;
+      g.add(roof);
+
+      // Bell Tower Steeple
+      const steeple = new THREE.Mesh(new THREE.BoxGeometry(1.2, 5.0, 1.2), mat(0xe2e8f0));
+      steeple.position.set(0, 2.5, 1.8);
+      g.add(steeple);
+
+      // Cross atop Steeple
+      const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.2, 0.1), mat(0xfbebe8));
+      crossH.position.set(0, 5.3, 1.8);
+      g.add(crossH);
+      const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.0, 0.1), mat(0xfbebe8));
+      crossV.position.set(0, 5.3, 1.8);
+      g.add(crossV);
+
+      const sign = createSignboard("CHURCH", 2.2, 0.5);
+      sign.position.set(0, 3.0, 2.26);
+      g.add(sign);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "COMMUNITY",
+        title: "Catholic Church",
+        description: "Local parish church serving community spiritual and gathering needs.",
+        stat1: "Historic", stat1Label: "Parish", stat2: "100%", stat2Label: "Solar Heated"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
+    }
+
+    // E. PUBLIC GROCERY MARKET
+    function createGroceryMarket(x, z) {
+      const g = new THREE.Group();
+
+      const hall = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.5, 3.5), mat(0x0f766e));
+      hall.position.y = 1.25;
+      g.add(hall);
+
+      // Colorful Produce Stalls out front
+      const stallColors = [0xef4444, 0xeab308, 0x22c55e];
+      for (let i = 0; i < 3; i++) {
+        const stall = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.8), mat(stallColors[i]));
+        stall.position.set(-1.2 + i * 1.2, 0.4, 1.8);
+        g.add(stall);
+      }
+
+      const sign = createSignboard("MARKET", 2.2, 0.5);
+      sign.position.set(0, 2.8, 1.76);
+      g.add(sign);
+
+      g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "COMMERCIAL",
+        title: "Eco Farmers Grocery Market",
+        description: "Fresh organic groceries sourced directly from local farm plots.",
+        stat1: "100%", stat1Label: "Local Produce", stat2: "Zero", stat2Label: "Plastic Bags"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      scene.add(g);
+    }
+
     createHospital(10, -10);
     createSchool(10, -3);
-    createPoliceStation(10, 5);
-    createFireStation(10, 9);
+    createCatholicChurch(10, 2);
+    createGroceryMarket(10, 6);
+    createPoliceStation(10, 10);
+    createFireStation(10, 13);
 
     // --- 6. EXACTLY 7 RESIDENTIAL HOUSES WITH SOLAR PANELS ---
     function createSolarHouse(x, z) {
@@ -373,21 +530,21 @@
     ];
     houseCoords.forEach(([hx, hz]) => createSolarHouse(hx, hz));
 
-    // --- 7. ECO FARM COMPLEX ---
-    function createFarm(x, z) {
+    // --- 7. ECO FARM WITH CORN, CABBAGE, CARROTS & VEGETABLES ---
+    function createComprehensiveFarm(x, z) {
       const g = new THREE.Group();
+
+      // Barn & Windmill
       const barn = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.2, 2.6), mat(0xd97706));
       barn.position.set(0, 1.1, 0);
       g.add(barn);
 
-      // Windmill
       const mill = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.8, 3.2, 8), mat(0xd97706));
       mill.position.set(-3, 1.6, 0);
       g.add(mill);
 
       const rotorGroup = new THREE.Group();
       rotorGroup.position.set(-3, 3.2, 0.5);
-
       for (let i = 0; i < 4; i++) {
         const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 0.02), mat(0xffffff));
         blade.rotation.z = (i * Math.PI) / 2;
@@ -396,12 +553,93 @@
       g.add(rotorGroup);
       windTurbines.push({ rotor: rotorGroup, speed: 2.0 });
 
+      // Vegetable Furrow Plots (Corn, Cabbages, Carrots)
+      const soil = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.1, 3.5), mat(0x3d2314));
+      soil.position.set(1.0, 0.05, 3.2);
+      g.add(soil);
+
+      // Corn Row (Yellow/Green Cones)
+      for (let cx = -1.8; cx <= 1.8; cx += 0.5) {
+        const corn = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.6, 4), mat(0xeab308));
+        corn.position.set(cx, 0.35, 2.2);
+        g.add(corn);
+      }
+
+      // Cabbage Row (Round Green Spheres)
+      for (let cx = -1.8; cx <= 1.8; cx += 0.5) {
+        const cabbage = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), mat(0x22c55e));
+        cabbage.position.set(cx, 0.18, 3.2);
+        g.add(cabbage);
+      }
+
+      // Carrot Row (Orange Tops)
+      for (let cx = -1.8; cx <= 1.8; cx += 0.5) {
+        const carrot = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.3, 4), mat(0xea580c));
+        carrot.rotation.x = Math.PI;
+        carrot.position.set(cx, 0.2, 4.2);
+        g.add(carrot);
+      }
+
       g.position.set(x, 0, z);
+
+      const meta = {
+        tag: "AGRICULTURE",
+        title: "Diversified Organic Crop Farm",
+        description: "Grows fresh corn, cabbages, carrots, and assorted vegetables for local markets.",
+        stat1: "100%", stat1Label: "Organic", stat2: "4 Crops", stat2Label: "Harvest Rows"
+      };
+      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
-    createFarm(-10, 8);
 
-    // --- 8. MANY TREES, BUSHES, & FLOWERS ---
+    createComprehensiveFarm(-10, 8);
+
+    // --- 8. 7 NAMED PERSONS WITH DIFFERENT OUTFIT COLORS ---
+    function createNamedPerson(x, z, nameText, shirtHex) {
+      const g = new THREE.Group();
+
+      // Person Mesh Body
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.45, 0.2), mat(shirtHex));
+      torso.position.y = 0.5;
+      g.add(torso);
+
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.18), mat(0xffdbac));
+      head.position.y = 0.85;
+      g.add(head);
+
+      // Name Label Tag Floating Overhead
+      const canvas = document.createElement('canvas');
+      canvas.width = 128; canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'; ctx.fillRect(0, 0, 128, 32);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(nameText, 64, 16);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      const label = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.25), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
+      label.position.y = 1.25;
+      g.add(label);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+
+      pedestrians.push({ group: g, dir: 1, speed: 0.5 });
+    }
+
+    // 7 Citizens with Names and Outfit Colors
+    const citizens = [
+      { name: "Cherry", color: 0xef4444, x: -4, z: 2 },   // Red
+      { name: "Tuesday", color: 0x3b82f6, x: -4, z: 4 },  // Blue
+      { name: "Michaela", color: 0xec4899, x: -3, z: 3 }, // Pink
+      { name: "Shella", color: 0xa855f7, x: 4, z: -2 },   // Purple
+      { name: "Mariel", color: 0xeab308, x: 4, z: 1 },    // Yellow
+      { name: "Althea", color: 0x14b8a6, x: 5, z: 3 },    // Teal
+      { name: "Chloe", color: 0xf97316, x: 4, z: 5 }      // Orange
+    ];
+    citizens.forEach(c => createNamedPerson(c.x, c.z, c.name, c.color));
+
+    // --- 9. MANY TREES, BUSHES, & FLOWERS ---
     function createTree(x, z, type = 'pine') {
       const g = new THREE.Group();
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 1.5, 6), mat(0x78350f));
@@ -424,14 +662,12 @@
       scene.add(g);
     }
 
-    // Flower Bushes Function
     function createFlowerBush(x, z, colorHex) {
       const g = new THREE.Group();
       const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(0.35, 0), mat(0x16a34a));
       bush.position.y = 0.35;
       g.add(bush);
 
-      // Flowers
       const flowerMat = mat(colorHex);
       for (let i = 0; i < 4; i++) {
         const blossom = new THREE.Mesh(new THREE.DodecahedronGeometry(0.08, 0), flowerMat);
@@ -444,45 +680,20 @@
       scene.add(g);
     }
 
-    // Dense Forest Coverage
     const treePositions = [
       [-12, 1, 'pine'], [-8, 1, 'leafy'], [-12, 4, 'leafy'], [-8, 4, 'pine'],
       [-5, -12, 'pine'], [-5, -8, 'leafy'], [-5, -4, 'pine'],
-      [4, -12, 'pine'], [4, -6, 'leafy'], [4, 2, 'pine'], [4, 8, 'leafy'], [4, 12, 'pine']
+      [4, -12, 'pine'], [4, -6, 'leafy'], [4, 8, 'leafy'], [4, 12, 'pine']
     ];
     treePositions.forEach(([tx, tz, type]) => createTree(tx, tz, type));
 
-    // Flower Bushes
     const flowerPositions = [
       [-5, 2, 0xef4444], [-4, 2, 0xec4899], [-5, 4, 0xeab308],
       [5, -2, 0xef4444], [6, -2, 0xec4899], [5, 4, 0xeab308], [6, 4, 0xef4444]
     ];
     flowerPositions.forEach(([fx, fz, col]) => createFlowerBush(fx, fz, col));
 
-    // --- 9. ELECTRIC VEHICLES ---
-    const trackPoints = [
-      new THREE.Vector3(-6, 0, -12),
-      new THREE.Vector3(-6, 0, 0),
-      new THREE.Vector3(6, 0, 0),
-      new THREE.Vector3(6, 0, 12),
-      new THREE.Vector3(6, 0, 0),
-      new THREE.Vector3(-6, 0, 0)
-    ];
-    const roadCurve = new THREE.CatmullRomCurve3(trackPoints, true);
-
-    function createEV(color) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 1.9), mat(color));
-      body.position.y = 0.45;
-      g.add(body);
-      scene.add(g);
-      animatedVehicles.push({ group: g, progress: Math.random(), speed: 0.06 });
-    }
-
-    createEV(0x10b981);
-    createEV(0x3b82f6);
-
-    // --- 10. WEATHER & ANIMATION ---
+    // --- 10. WEATHER & ANIMATION LOOP ---
     const rainCount = 800;
     const rainGeo = new THREE.BufferGeometry();
     const rainPos = new Float32Array(rainCount * 3);
@@ -509,6 +720,15 @@
 
       sunLight.position.x = Math.cos(angle) * 45;
       sunLight.position.y = sunHeight * 45;
+
+      // Calculate night factor for streetlights
+      let nightFactor = 0;
+      if (sunHeight < 0.1) {
+        nightFactor = Math.min(Math.max((0.1 - sunHeight) / 0.3, 0), 1);
+      }
+
+      nighttimeEmissives.forEach(m => m.emissiveIntensity = nightFactor * 2.5);
+      nighttimeLights.forEach(l => l.intensity = nightFactor * 4.0);
 
       if (sunHeight > 0.2) {
         scene.background.lerpColors(sunsetSky, daySky, (sunHeight - 0.2) / 0.8);
@@ -567,7 +787,6 @@
 
     // --- 11. MAIN ANIMATION LOOP ---
     const clock = new THREE.Clock();
-    const lookTarget = new THREE.Vector3();
 
     function animate() {
       requestAnimationFrame(animate);
@@ -579,14 +798,10 @@
       // Rotate Windmill
       windTurbines.forEach(wt => { wt.rotor.rotation.z += wt.speed * dt; });
 
-      // Move Electric Cars
-      animatedVehicles.forEach(v => {
-        v.progress = (v.progress + dt * v.speed) % 1.0;
-        const pos = roadCurve.getPointAt(v.progress);
-        v.group.position.copy(pos);
-        const ahead = roadCurve.getPointAt((v.progress + 0.01) % 1.0);
-        lookTarget.set(ahead.x, pos.y, ahead.z);
-        v.group.lookAt(lookTarget);
+      // Animate Pedestrians
+      pedestrians.forEach(p => {
+        p.group.position.z += p.speed * dt * p.dir;
+        if (Math.abs(p.group.position.z) > 10) p.dir *= -1;
       });
 
       // Animate Rain
