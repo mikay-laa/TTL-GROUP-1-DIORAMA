@@ -120,27 +120,27 @@
     });
     nighttimeEmissives.push(streetlightBulbMat);
 
-    // --- 3. TERRAIN BASE & RIVER (36x36 PERFECT DIORAMA SQUARE) ---
+    // --- 3. TERRAIN BASE & RIVER (ORGANIZED LAYOUT) ---
     const terrain = new THREE.Group();
 
-    // Brown Soil Base Crust
+    // Brown Base Crust
     const baseCrust = new THREE.Mesh(new THREE.BoxGeometry(36, 4, 36), mat(0x451a03));
     baseCrust.position.y = -3.0;
     terrain.add(baseCrust);
 
-    // West Green Bank
+    // West Green Bank (Housing & Windmill Farm Side)
     const westBank = new THREE.Mesh(new THREE.BoxGeometry(14, 1, 36), mat(0x16a34a));
     westBank.position.set(-11, -0.5, 0);
     westBank.receiveShadow = true;
     terrain.add(westBank);
 
-    // East Green Bank
+    // East Green Bank (Civic Buildings Side)
     const eastBank = new THREE.Mesh(new THREE.BoxGeometry(14, 1, 36), mat(0x16a34a));
     eastBank.position.set(11, -0.5, 0);
     eastBank.receiveShadow = true;
     terrain.add(eastBank);
 
-    // River Center
+    // Clean River Channel (Center)
     const river = new THREE.Mesh(
       new THREE.BoxGeometry(8, 0.8, 36),
       new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, transparent: true, opacity: 0.75 })
@@ -150,7 +150,7 @@
 
     scene.add(terrain);
 
-    // River Swimming Fish
+    // Swimming Fishes
     function createRiverFish(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.4, 4), mat(0xf97316));
@@ -198,28 +198,28 @@
     }
     createWoodenBridge(0, 0);
 
-    // --- 4. ROADS & PEDESTRIAN CROSSINGS ---
-    // Main Horizontal Avenue
+    // --- 4. CLEAR ROADS (NO BUILDINGS OR OBSTACLES) ---
+    // Main Bridge Crossing Road
     const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(36, 0.02, 2.8), mat(0x1e293b));
     mainRoad.position.set(0, 0.02, 0);
     scene.add(mainRoad);
 
-    // East North-South Highway
+    // East North-South Avenue (x = 6.5)
     const eastRoad = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.02, 36), mat(0x1e293b));
     eastRoad.position.set(6.5, 0.021, 0);
     scene.add(eastRoad);
 
-    // West North-South Highway
+    // West North-South Avenue (x = -6.5)
     const westRoad = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.02, 36), mat(0x1e293b));
     westRoad.position.set(-6.5, 0.021, 0);
     scene.add(westRoad);
 
-    // Green Bike Lane
+    // Bike Lane
     const bikeLaneWest = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.022, 36), mat(0x16a34a));
     bikeLaneWest.position.set(-5.0, 0.022, 0);
     scene.add(bikeLaneWest);
 
-    // Road White Dashed Stripes
+    // White Dashed Lines
     for (let sx = -17; sx <= 17; sx += 2) {
       if (Math.abs(sx) > 3.8) {
         const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.023, 0.12), mat(0xffffff));
@@ -237,7 +237,7 @@
       scene.add(stripeW);
     }
 
-    // Pedestrian Zebra Lines
+    // Crosswalks
     function createPedestrianCrosswalk(x, z, rotate = false) {
       const g = new THREE.Group();
       for (let i = -1.0; i <= 1.0; i += 0.4) {
@@ -252,7 +252,7 @@
     createPedestrianCrosswalk(6.5, 2.2);
     createPedestrianCrosswalk(2.2, 0, true);
 
-    // OPERATING TRAFFIC LIGHTS SYSTEM
+    // Operating Traffic Lights
     function createOperatingTrafficLight(x, z) {
       const g = new THREE.Group();
       const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.8), mat(0x334155));
@@ -282,6 +282,7 @@
     createOperatingTrafficLight(-5.0, 1.8);
     createOperatingTrafficLight(5.0, -1.8);
 
+    // Waiting Shed (Placed on Grass Sidewalk)
     function createWaitingShed(x, z) {
       const g = new THREE.Group();
       for (let px of [-0.9, 0.9]) {
@@ -326,25 +327,8 @@
     createStreetlight(5, 2);    createStreetlight(5, -2);
     createStreetlight(-5, 10);  createStreetlight(5, 10);
     createStreetlight(-14, -14); createStreetlight(14, -14);
-    createStreetlight(-14, 14);  createStreetlight(14, 14);
 
-    // Trash & Recycling Bins
-    function createTrashBins(x, z) {
-      const g = new THREE.Group();
-      const binColors = [0xef4444, 0x3b82f6, 0x22c55e];
-      binColors.forEach((col, i) => {
-        const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 0.45, 12), mat(col));
-        bin.position.set((i - 1) * 0.4, 0.225, 0);
-        g.add(bin);
-      });
-      g.position.set(x, 0, z);
-      scene.add(g);
-    }
-    createTrashBins(-5.5, 4);
-    createTrashBins(5.5, -4);
-    createTrashBins(-5.5, -10);
-
-    // Park & Playground
+    // Eco Playground & Park (Safely on Green Grass)
     function createParkAndPlayground(x, z) {
       const g = new THREE.Group();
 
@@ -386,7 +370,7 @@
 
       const meta = {
         tag: "RECREATION", title: "Eco Playground & Park",
-        description: "Community park with sandbox, slide, and relaxing wooden benches.",
+        description: "Community park with sandbox, slide, and wooden benches.",
         stat1: "100%", stat1Label: "Green Space", stat2: "Family", stat2Label: "Playground"
       };
       g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
@@ -445,7 +429,7 @@
       return g;
     }
 
-    // --- 5. CIVIC BUILDINGS (EAST SIDE) ---
+    // --- 5. CIVIC BUILDINGS & STATIONS (EAST GREEN AREA) ---
     function createHumanoid(shirtColor, pantsColor = 0x1e293b, accessory = null) {
       const g = new THREE.Group();
       const legs = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 0.15), mat(pantsColor));
@@ -730,28 +714,28 @@
     }
     houseCoords.forEach(([hx, hz]) => createSmallHouse(hx - 3.2, hz));
 
-    // --- 7. 3 BUILDINGS & GAS STATION (WEST & EAST GREEN TERRAIN) ---
+    // --- 7. 3 BUILDINGS & GAS STATION (ALL PLACED ON GREEN SPACES) ---
     function createReferenceBuilding(x, z, wallColor) {
       const g = new THREE.Group();
 
-      const pad = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.1, 4.2), mat(0xe2e8f0));
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.1, 3.6), mat(0xe2e8f0));
       pad.position.y = 0.05;
       g.add(pad);
 
-      const body = new THREE.Mesh(new THREE.BoxGeometry(3.6, 4.5, 3.6), mat(wallColor));
-      body.position.y = 2.3;
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 4.2, 3.2), mat(wallColor));
+      body.position.y = 2.15;
       g.add(body);
 
-      const roofRim = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.2, 3.8), mat(wallColor));
-      roofRim.position.y = 4.65;
+      const roofRim = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.15, 3.4), mat(wallColor));
+      roofRim.position.y = 4.3;
       g.add(roofRim);
 
       const ribbonMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.2, metalness: 0.8 });
-      for (let y = 1.2; y <= 3.9; y += 0.9) {
+      for (let y = 1.1; y <= 3.6; y += 0.8) {
         for (let side = 0; side < 4; side++) {
-          const band = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.45, 0.05), ribbonMat);
+          const band = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 0.05), ribbonMat);
           band.rotation.y = (side * Math.PI) / 2;
-          const posOffset = 1.81;
+          const posOffset = 1.61;
           if (side === 0) band.position.set(0, y, posOffset);
           if (side === 1) band.position.set(posOffset, y, 0);
           if (side === 2) band.position.set(0, y, -posOffset);
@@ -764,42 +748,43 @@
       scene.add(g);
     }
 
-    // Positioned safely within green ground boundaries
-    createReferenceBuilding(-11.5, -16.5, 0xffffff);
-    createReferenceBuilding(-5.5, -16.5, 0xe0f2fe);
-    createReferenceBuilding(0.5, -16.5, 0xfef3c7);
+    // 3 Mid-Rise Buildings aligned safely in North Green Grass Space
+    createReferenceBuilding(-11.5, -2.5, 0xffffff);
+    createReferenceBuilding(-11.5, 2.5, 0xe0f2fe);
+    createReferenceBuilding(-11.5, 7.5, 0xfef3c7);
 
+    // Gas Station aligned safely on East Green Grass
     function createGasStation(x, z) {
       const g = new THREE.Group();
 
-      const canopy = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.3, 3.0), mat(0x0284c7));
-      canopy.position.y = 2.4;
+      const canopy = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.25, 2.8), mat(0x0284c7));
+      canopy.position.y = 2.2;
       g.add(canopy);
 
-      for (let cx of [-1.8, 1.8]) {
-        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.4), mat(0xe2e8f0));
-        pillar.position.set(cx, 1.2, 0);
+      for (let cx of [-1.5, 1.5]) {
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.2), mat(0xe2e8f0));
+        pillar.position.set(cx, 1.1, 0);
         g.add(pillar);
       }
 
       const pumpColors = [0xef4444, 0x2563eb, 0xeab308];
       pumpColors.forEach((col, idx) => {
-        const pump = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.8, 0.35), mat(col));
-        pump.position.set(-0.8 + idx * 0.8, 0.4, 0);
+        const pump = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.75, 0.35), mat(col));
+        pump.position.set(-0.7 + idx * 0.7, 0.375, 0);
         g.add(pump);
       });
 
-      const sign = createSignboard("GAS STATION", 2.2, 0.4);
-      sign.position.set(0, 2.7, 1.51);
+      const sign = createSignboard("GAS STATION", 2.0, 0.4);
+      sign.position.set(0, 2.5, 1.41);
       g.add(sign);
 
       g.position.set(x, 0, z);
       scene.add(g);
     }
-    createGasStation(11.5, -16.5);
+    createGasStation(11.5, -1);
 
-    // --- 8. SPECIALIZED VEHICLE FLEET WITH NIGHT PARKING ---
-    function createBaseVehicle(colorHex, length = 1.8, width = 1.0, height = 0.5) {
+    // --- 8. VEHICLES MOVING STRICTLY ON ROADS & PARKING IN STATIONS ---
+    function createBaseVehicle(colorHex, length = 1.8, width = 0.9, height = 0.5) {
       const carGroup = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(width, height, length), mat(colorHex));
       body.position.y = height / 2 + 0.1;
@@ -844,26 +829,25 @@
       return v;
     }
 
-    // Precise Centerline Road Waypoint Loops
+    // Precise Road Centerline Loops
     const eastRoadLoop = [
       new THREE.Vector3(6.5, 0, 14),
-      new THREE.Vector3(6.5, 0, -12),
       new THREE.Vector3(6.5, 0, -14),
       new THREE.Vector3(6.5, 0, 10)
     ];
 
     const westRoadLoop = [
       new THREE.Vector3(-6.5, 0, -14),
-      new THREE.Vector3(-6.5, 0, 12),
       new THREE.Vector3(-6.5, 0, 14),
       new THREE.Vector3(-6.5, 0, -10)
     ];
 
-    const nightParkingStalls = [
-      new THREE.Vector3(-11.5, 0, -13),
-      new THREE.Vector3(-11.5, 0, -9.5),
-      new THREE.Vector3(11.5, 0, -13),
-      new THREE.Vector3(11.5, 0, -7)
+    // Parking in respective stations: Police Station, Fire Station, Hospital, Gas Station
+    const stationParkingSpots = [
+      new THREE.Vector3(11.5, 0, 10.5), // Police Station
+      new THREE.Vector3(11.5, 0, 14.5), // Fire Station
+      new THREE.Vector3(11.5, 0, -13),  // Hospital
+      new THREE.Vector3(11.5, 0, -1)     // Gas Station
     ];
 
     function registerVehicle(vGroup, waypoints, speed, parkPos, startIdx = 0) {
@@ -878,10 +862,10 @@
       });
     }
 
-    registerVehicle(createPoliceCar(), eastRoadLoop, 3.5, nightParkingStalls[0], 0);
-    registerVehicle(createFireEngine(), westRoadLoop, 3.0, nightParkingStalls[1], 1);
-    registerVehicle(createAmbulance(), eastRoadLoop, 3.8, nightParkingStalls[2], 2);
-    registerVehicle(createSchoolBus(), westRoadLoop, 2.5, nightParkingStalls[3], 3);
+    registerVehicle(createPoliceCar(), eastRoadLoop, 3.5, stationParkingSpots[0], 0);
+    registerVehicle(createFireEngine(), westRoadLoop, 3.0, stationParkingSpots[1], 1);
+    registerVehicle(createAmbulance(), eastRoadLoop, 3.8, stationParkingSpots[2], 2);
+    registerVehicle(createSchoolBus(), westRoadLoop, 2.5, stationParkingSpots[3], 0);
 
     // --- 9. FARM & 3 WINDMILLS ---
     function createFarm(x, z) {
@@ -995,6 +979,7 @@
       });
     }
 
+    // 7 Named Citizens
     createNamedPersonWithAction(-8.2, 1.8, "Cherry", 0xef4444, 'SITTING');
     createNamedPersonWithAction(-8.0, 6.0, "Tuesday", 0x3b82f6, 'RUNNING');
     createNamedPersonWithAction(-8.0, -4.0, "Michaela", 0xec4899, 'WALKING');
@@ -1003,7 +988,7 @@
     createNamedPersonWithAction(-5.5, -2.0, "Althea", 0x14b8a6, 'SITTING');
     createNamedPersonWithAction(8.0, 11.0, "Chloe", 0xf97316, 'WALKING');
 
-    // --- 11. TREES (OFF-ROAD) ---
+    // --- 11. HIGHWAY TREES (PLANTED SAFELY OFF-ROAD) ---
     function createTree(x, z) {
       const g = new THREE.Group();
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 1.5, 6), mat(0x78350f));
@@ -1062,7 +1047,7 @@
 
       isNight = sunHeight <= 0.0;
 
-      // EVENING ROUTINE: Hide people at night, show in morning
+      // Hide people at night, show during morning
       pedestrians.forEach(p => p.group.visible = !isNight);
       cyclists.forEach(c => c.group.visible = !isNight);
 
@@ -1152,10 +1137,10 @@
         if (f.group.position.z > 16) f.group.position.z = -16;
       });
 
-      // VEHICLE EVENING PARKING & ROAD NAVIGATION
+      // VEHICLE EVENING PARKING IN STATIONS & ROAD NAVIGATION
       animatedVehicles.forEach(vehicle => {
         if (isNight) {
-          // Park vehicle at night
+          // Drive smoothly to station parking position at night
           const distToPark = vehicle.group.position.distanceTo(vehicle.parkPos);
           if (distToPark > 0.2) {
             const pDir = new THREE.Vector3().subVectors(vehicle.parkPos, vehicle.group.position).normalize();
@@ -1163,11 +1148,11 @@
             vehicle.group.lookAt(vehicle.parkPos);
           }
         } else {
-          // Drive along roads during daytime
+          // Drive along designated roads during daytime
           const targetPoint = vehicle.waypoints[vehicle.targetIdx];
           let shouldStop = false;
 
-          // Stop at Red Traffic Light
+          // Stop at Red Light
           trafficLights.forEach(tl => {
             if (tl.state === 'RED') {
               const distToSignal = Math.hypot(vehicle.group.position.x - tl.x, vehicle.group.position.z - tl.z);
@@ -1175,7 +1160,7 @@
             }
           });
 
-          // Stop if Pedestrian is nearby
+          // Stop when pedestrian is nearby on crosswalk
           pedestrians.forEach(ped => {
             if (ped.group.visible && ped.state !== 'STATIC' && ped.state !== 'SITTING') {
               const distToPed = vehicle.group.position.distanceTo(ped.group.position);
