@@ -193,22 +193,98 @@
     }
     createWoodenBridge(0, 0);
 
-    // Roads & Bike Lanes
-    const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(36, 0.02, 2.8), mat(0x1e293b));
-    mainRoad.position.set(0, 0.02, 0);
-    scene.add(mainRoad);
+    // --- ROADS WITH WHITE DASHED STRIPES & PEDESTRIAN CROSSINGS ---
+    function createRoadWithStripes(width, depth, x, z, isVertical = false) {
+      const g = new THREE.Group();
+      const roadMesh = new THREE.Mesh(new THREE.BoxGeometry(width, 0.02, depth), mat(0x1e293b));
+      roadMesh.position.y = 0.02;
+      g.add(roadMesh);
 
-    const eastRoad = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.02, 36), mat(0x1e293b));
-    eastRoad.position.set(6.5, 0.021, 0);
-    scene.add(eastRoad);
+      const stripeMat = mat(0xffffff);
+      if (isVertical) {
+        for (let sz = -depth / 2 + 1; sz < depth / 2; sz += 2) {
+          const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.022, 0.8), stripeMat);
+          stripe.position.set(0, 0.021, sz);
+          g.add(stripe);
+        }
+      } else {
+        for (let sx = -width / 2 + 1; sx < width / 2; sx += 2) {
+          const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.022, 0.12), stripeMat);
+          stripe.position.set(sx, 0.021, 0);
+          g.add(stripe);
+        }
+      }
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
 
-    const westRoad = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.02, 36), mat(0x1e293b));
-    westRoad.position.set(-6.5, 0.021, 0);
-    scene.add(westRoad);
+    createRoadWithStripes(36, 2.8, 0, 0, false);
+    createRoadWithStripes(2.8, 36, 6.5, 0, true);
+    createRoadWithStripes(2.8, 36, -6.5, 0, true);
 
     const bikeLaneWest = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.022, 36), mat(0x16a34a));
     bikeLaneWest.position.set(-5.0, 0.022, 0);
     scene.add(bikeLaneWest);
+
+    // Pedestrian Zebra Lines
+    function createPedestrianCrosswalk(x, z, rotate = false) {
+      const g = new THREE.Group();
+      for (let i = -1.0; i <= 1.0; i += 0.4) {
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(rotate ? 0.25 : 2.2, 0.025, rotate ? 2.2 : 0.25), mat(0xffffff));
+        stripe.position.set(rotate ? i : 0, 0.022, rotate ? 0 : i);
+        g.add(stripe);
+      }
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+    createPedestrianCrosswalk(-6.5, 2.2);
+    createPedestrianCrosswalk(6.5, 2.2);
+    createPedestrianCrosswalk(2.2, 0, true);
+
+    // Traffic Lights & Waiting Shed
+    function createTrafficLight(x, z) {
+      const g = new THREE.Group();
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.8), mat(0x334155));
+      pole.position.y = 1.4;
+      g.add(pole);
+
+      const box = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.9, 0.35), mat(0x0f172a));
+      box.position.y = 2.4;
+      g.add(box);
+
+      const redLight = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), mat(0xef4444));
+      redLight.position.set(0, 2.65, 0.18);
+      g.add(redLight);
+
+      const greenLight = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), mat(0x22c55e));
+      greenLight.position.set(0, 2.15, 0.18);
+      g.add(greenLight);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+    createTrafficLight(-5.0, 1.8);
+    createTrafficLight(5.0, -1.8);
+
+    function createWaitingShed(x, z) {
+      const g = new THREE.Group();
+      for (let px of [-0.9, 0.9]) {
+        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.8), mat(0x475569));
+        p.position.set(px, 0.9, 0);
+        g.add(p);
+      }
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.08, 1.0), mat(0x0284c7));
+      roof.position.set(0, 1.8, 0);
+      g.add(roof);
+
+      const bench = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.3), mat(0x78350f));
+      bench.position.set(0, 0.4, 0);
+      g.add(bench);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+    createWaitingShed(-8.2, 1.8);
 
     // --- STREETLIGHTS IN MAIN ROADS & DARK CORNERS ---
     function createStreetlight(x, z) {
@@ -230,7 +306,6 @@
       scene.add(g);
     }
 
-    // Main & Dark Corner Streetlights
     createStreetlight(-5, 2);   createStreetlight(-5, -2);
     createStreetlight(5, 2);    createStreetlight(5, -2);
     createStreetlight(-5, 10);  createStreetlight(5, 10);
@@ -258,17 +333,14 @@
     function createParkAndPlayground(x, z) {
       const g = new THREE.Group();
 
-      // Lawn Base
       const lawn = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.03, 5.5), mat(0x15803d));
       lawn.position.y = 0.015;
       g.add(lawn);
 
-      // Sandbox
       const sandbox = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.1, 1.8), mat(0xfde047));
       sandbox.position.set(-1.0, 0.05, -1.2);
       g.add(sandbox);
 
-      // Playground Slide
       const slidePost = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.2), mat(0xef4444));
       slidePost.position.set(1.2, 0.6, -1.2);
       g.add(slidePost);
@@ -278,7 +350,6 @@
       slideRamp.position.set(1.2, 0.4, -0.6);
       g.add(slideRamp);
 
-      // Park Benches
       function createBench(bx, bz, rotY) {
         const bg = new THREE.Group();
         const seat = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 0.3), mat(0x78350f));
@@ -360,7 +431,37 @@
       return g;
     }
 
-    // --- 4. CIVIC BUILDINGS ---
+    // --- 4. CIVIC BUILDINGS & PERSONS ---
+    function createHumanoid(shirtColor, pantsColor = 0x1e293b, accessory = null) {
+      const g = new THREE.Group();
+      const legs = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 0.15), mat(pantsColor));
+      legs.position.y = 0.175;
+      g.add(legs);
+
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.4, 0.18), mat(shirtColor));
+      torso.position.y = 0.55;
+      g.add(torso);
+
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), mat(0xffdbac));
+      head.position.y = 0.83;
+      g.add(head);
+
+      if (accessory === 'basket') {
+        const basket = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.18, 0.2), mat(0x78350f));
+        basket.position.set(0.18, 0.45, 0.1);
+        g.add(basket);
+      } else if (accessory === 'policeCap') {
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.08, 0.22), mat(0x1e3a8a));
+        cap.position.y = 0.93;
+        g.add(cap);
+      } else if (accessory === 'fireHelmet') {
+        const helmet = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), mat(0xef4444));
+        helmet.position.y = 0.92;
+        g.add(helmet);
+      }
+      return g;
+    }
+
     function createHospital(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(4.2, 4.0, 3.6), mat(0xf8fafc));
@@ -383,14 +484,16 @@
       addBigRooftopSolar(g, 3.2, 2.8, 4.08);
       addInteriorNightLight(g, 2.0);
 
-      g.position.set(x, 0, z);
+      // Add Nurse & Doctor
+      const doctor = createHumanoid(0xffffff, 0x0284c7); // White coat, blue pants
+      doctor.position.set(-1.0, 0, 2.1);
+      g.add(doctor);
 
-      const meta = {
-        tag: "HEALTHCARE", title: "Regional Eco-Hospital",
-        description: "Solar-powered hospital with red-tinted energy glass windows.",
-        stat1: "100%", stat1Label: "Solar Powered", stat2: "24/7", stat2Label: "Emergency Care"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      const nurse = createHumanoid(0x38bdf8, 0xffffff); // Blue scrubs, white pants
+      nurse.position.set(1.0, 0, 2.1);
+      g.add(nurse);
+
+      g.position.set(x, 0, z);
       scene.add(g);
     }
 
@@ -411,14 +514,14 @@
       addBigRooftopSolar(g, 3.8, 2.6, 2.88);
       addInteriorNightLight(g, 1.5);
 
-      g.position.set(x, 0, z);
+      // Add Students with Uniforms
+      for (let s = -1.2; s <= 1.2; s += 1.2) {
+        const student = createHumanoid(0xffffff, 0x1e3a8a); // White shirt, navy pants
+        student.position.set(s, 0, 2.1);
+        g.add(student);
+      }
 
-      const meta = {
-        tag: "EDUCATION", title: "Green School",
-        description: "Public school campus flying the Philippine flag with rooftop solar arrays.",
-        stat1: "600", stat1Label: "Students", stat2: "A+", stat2Label: "Energy Rating"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      g.position.set(x, 0, z);
       scene.add(g);
     }
 
@@ -447,13 +550,6 @@
       addInteriorNightLight(g, 2.0);
 
       g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "COMMUNITY", title: "Catholic Church",
-        description: "Spacious parish church set back safely from the main avenue.",
-        stat1: "100%", stat1Label: "Solar Heated", stat2: "Parish", stat2Label: "Community"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
 
@@ -474,17 +570,26 @@
       sign.position.set(0, 2.7, 1.61);
       g.add(sign);
 
+      // Section Signages for Dry Goods & Wet Goods
+      const drySign = createSignboard("DRY GOODS", 1.2, 0.3);
+      drySign.position.set(-1.0, 1.8, 1.62);
+      g.add(drySign);
+
+      const wetSign = createSignboard("WET GOODS", 1.2, 0.3);
+      wetSign.position.set(1.0, 1.8, 1.62);
+      g.add(wetSign);
+
       addBigRooftopSolar(g, 3.2, 2.4, 2.48);
       addInteriorNightLight(g, 1.2);
 
-      g.position.set(x, 0, z);
+      // People buying with Grocery Baskets
+      for (let b = -1.2; b <= 1.2; b += 0.8) {
+        const shopper = createHumanoid(0xec4899, 0x0284c7, 'basket');
+        shopper.position.set(b, 0, 2.4);
+        g.add(shopper);
+      }
 
-      const meta = {
-        tag: "COMMERCIAL", title: "Eco Grocery Market",
-        description: "Spacious grocery hall selling local farm produce.",
-        stat1: "100%", stat1Label: "Organic", stat2: "Zero", stat2Label: "Waste"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
+      g.position.set(x, 0, z);
       scene.add(g);
     }
 
@@ -497,6 +602,10 @@
       const sign = createSignboard("POLICE", 1.8, 0.5);
       sign.position.set(0, 2.9, 1.21);
       g.add(sign);
+
+      const officer = createHumanoid(0x1e3a8a, 0x0f172a, 'policeCap');
+      officer.position.set(0, 0, 1.5);
+      g.add(officer);
 
       addBigRooftopSolar(g, 2.2, 1.8, 2.68);
       addInteriorNightLight(g, 1.3);
@@ -515,6 +624,10 @@
       sign.position.set(0, 2.9, 1.31);
       g.add(sign);
 
+      const fireman = createHumanoid(0xeab308, 0x7f1d1d, 'fireHelmet');
+      fireman.position.set(0, 0, 1.6);
+      g.add(fireman);
+
       addBigRooftopSolar(g, 2.4, 2.0, 2.68);
       addInteriorNightLight(g, 1.3);
 
@@ -529,7 +642,25 @@
     createPoliceStation(11.5, 10.5);
     createFireStation(11.5, 14.5);
 
-    // --- 5. EXACTLY 7 RESIDENTIAL HOUSES ---
+    // --- 5. RESIDENTIAL HOUSES, WATER TANK & SMALL HOUSES ---
+    // Big Water Tank connected to each house
+    function createCentralWaterTank(x, z) {
+      const g = new THREE.Group();
+      const tankBody = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 3.0, 16), mat(0x94a3b8, 0.3, 0.8));
+      tankBody.position.y = 3.0;
+      g.add(tankBody);
+
+      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 2) {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.0), mat(0x334155));
+        leg.position.set(Math.cos(angle) * 1.0, 1.5, Math.sin(angle) * 1.0);
+        g.add(leg);
+      }
+      g.position.set(x, 0, z);
+      scene.add(g);
+      return g;
+    }
+    const waterTank = createCentralWaterTank(-14.5, -15);
+
     function createSolarHouse(x, z) {
       const g = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.5, 2.0), mat(0xfff7ed));
@@ -548,11 +679,17 @@
       addBigRooftopSolar(g, 1.4, 1.0, 2.3);
       addInteriorNightLight(g, 0.8);
 
+      // Water Supply Pipe Connecting to Tank Base
+      const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 3.0), mat(0x38bdf8));
+      pipe.rotation.z = Math.PI / 2;
+      pipe.position.set(-1.5, 0.2, 0);
+      g.add(pipe);
+
       g.position.set(x, 0, z);
 
       const meta = {
         tag: "RESIDENTIAL", title: "Solar House",
-        description: "Smart home equipped with big rooftop solar panels and interior night lighting.",
+        description: "Smart home equipped with big rooftop solar panels, connected to the central water supply.",
         stat1: "Net 0", stat1Label: "Emissions", stat2: "100%", stat2Label: "Self-Powered"
       };
       g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
@@ -567,6 +704,104 @@
     ];
     houseCoords.forEach(([hx, hz]) => createSolarHouse(hx, hz));
 
+    // Small Houses behind the 7 primary houses
+    function createSmallHouse(x, z) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 1.2), mat(0xfef3c7));
+      body.position.y = 0.5;
+      g.add(body);
+
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.7, 4), mat(0xb91c1c));
+      roof.rotation.y = Math.PI / 4;
+      roof.position.y = 1.35;
+      g.add(roof);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+    houseCoords.forEach(([hx, hz]) => createSmallHouse(hx - 3.2, hz));
+
+    // --- 3 MID-RISE BUILDINGS MATCHING REFERENCE DESIGN WITH SPACING ---
+    function createReferenceBuilding(x, z, wallColor) {
+      const g = new THREE.Group();
+
+      // Base Platform
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.1, 4.2), mat(0xe2e8f0));
+      pad.position.y = 0.05;
+      g.add(pad);
+
+      // Main Block
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3.6, 4.5, 3.6), mat(wallColor));
+      body.position.y = 2.3;
+      g.add(body);
+
+      // Parapet Roof Rim
+      const roofRim = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.2, 3.8), mat(wallColor));
+      roofRim.position.y = 4.65;
+      g.add(roofRim);
+
+      // Horizontal Window Ribbon Bands across 4 stories
+      const ribbonMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.2, metalness: 0.8 });
+      for (let y = 1.2; y <= 3.9; y += 0.9) {
+        for (let side = 0; side < 4; side++) {
+          const band = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.45, 0.05), ribbonMat);
+          band.rotation.y = (side * Math.PI) / 2;
+          const posOffset = 1.81;
+          if (side === 0) band.position.set(0, y, posOffset);
+          if (side === 1) band.position.set(posOffset, y, 0);
+          if (side === 2) band.position.set(0, y, -posOffset);
+          if (side === 3) band.position.set(-posOffset, y, 0);
+          g.add(band);
+        }
+      }
+
+      // Small trees around the building base
+      const tree1 = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), mat(0x22c55e));
+      tree1.position.set(-1.6, 0.5, 1.6);
+      g.add(tree1);
+      const tree2 = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), mat(0x22c55e));
+      tree2.position.set(1.6, 0.5, 1.6);
+      g.add(tree2);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+
+    createReferenceBuilding(-11.5, -22, 0xffffff); // White
+    createReferenceBuilding(-5.0, -22, 0xe0f2fe);  // Soft Blue
+    createReferenceBuilding(1.5, -22, 0xfef3c7);   // Soft Yellow
+
+    // --- GAS STATION WITH BLUE, RED & YELLOW PUMPS ---
+    function createGasStation(x, z) {
+      const g = new THREE.Group();
+
+      const canopy = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.3, 3.0), mat(0x0284c7));
+      canopy.position.y = 2.4;
+      g.add(canopy);
+
+      for (let cx of [-1.8, 1.8]) {
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.4), mat(0xe2e8f0));
+        pillar.position.set(cx, 1.2, 0);
+        g.add(pillar);
+      }
+
+      // Pumps: Red, Blue, Yellow
+      const pumpColors = [0xef4444, 0x2563eb, 0xeab308];
+      pumpColors.forEach((col, idx) => {
+        const pump = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.8, 0.35), mat(col));
+        pump.position.set(-0.8 + idx * 0.8, 0.4, 0);
+        g.add(pump);
+      });
+
+      const sign = createSignboard("GAS STATION", 2.2, 0.4);
+      sign.position.set(0, 2.7, 1.51);
+      g.add(sign);
+
+      g.position.set(x, 0, z);
+      scene.add(g);
+    }
+    createGasStation(11.5, -20);
+
     // CARS WITH WINDOWS THAT ROUTE & PARK
     function createParkingLot(x, z) {
       const g = new THREE.Group();
@@ -574,7 +809,6 @@
       pad.position.y = 0.02;
       g.add(pad);
 
-      // Lines
       for (let lineZ of [-1.5, 0, 1.5]) {
         const line = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.03, 0.1), mat(0xffffff));
         line.position.set(0, 0.025, lineZ);
@@ -586,14 +820,12 @@
     }
     createParkingLot(-11.5, -16);
 
-    // EV Car Model with Windows
     function createEVWithWindows(colorHex) {
       const carGroup = new THREE.Group();
       const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 1.9), mat(colorHex));
       body.position.y = 0.35;
       carGroup.add(body);
 
-      // Cabin Glass Windows
       const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.45, 1.0), carGlassMat);
       cabin.position.set(0, 0.7, -0.1);
       carGroup.add(cabin);
@@ -602,13 +834,12 @@
       return carGroup;
     }
 
-    // Roadway to Parking Waypoints Loop
     const carPathWaypoints = [
       new THREE.Vector3(6.5, 0, 14),
       new THREE.Vector3(6.5, 0, 0),
       new THREE.Vector3(-6.5, 0, 0),
       new THREE.Vector3(-6.5, 0, -16),
-      new THREE.Vector3(-11.5, 0, -16) // Final Parking Stall Destination
+      new THREE.Vector3(-11.5, 0, -16)
     ];
 
     const animatedCar = createEVWithWindows(0x10b981);
@@ -619,26 +850,33 @@
       speed: 4.0
     });
 
-    // --- 6. FARM ---
+    // --- 6. FARM & 2 ADDITIONAL WINDMILLS (TOTAL 3) ---
     function createFarm(x, z) {
       const g = new THREE.Group();
       const barn = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.0, 2.4), mat(0xd97706));
       barn.position.set(0, 1.0, 0);
       g.add(barn);
 
-      const mill = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.8, 3.0, 8), mat(0xd97706));
-      mill.position.set(-2.8, 1.5, 0);
-      g.add(mill);
+      function addWindmill(wx, wz) {
+        const mill = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.8, 3.0, 8), mat(0xd97706));
+        mill.position.set(wx, 1.5, wz);
+        g.add(mill);
 
-      const rotorGroup = new THREE.Group();
-      rotorGroup.position.set(-2.8, 3.0, 0.5);
-      for (let i = 0; i < 4; i++) {
-        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.4, 0.02), mat(0xffffff));
-        blade.rotation.z = (i * Math.PI) / 2;
-        rotorGroup.add(blade);
+        const rotorGroup = new THREE.Group();
+        rotorGroup.position.set(wx, 3.0, wz + 0.5);
+        for (let i = 0; i < 4; i++) {
+          const blade = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.4, 0.02), mat(0xffffff));
+          blade.rotation.z = (i * Math.PI) / 2;
+          rotorGroup.add(blade);
+        }
+        g.add(rotorGroup);
+        windTurbines.push({ rotor: rotorGroup, speed: 2.0 });
       }
-      g.add(rotorGroup);
-      windTurbines.push({ rotor: rotorGroup, speed: 2.0 });
+
+      // Three Windmills total
+      addWindmill(-2.8, 0);
+      addWindmill(-2.8, -3.0);
+      addWindmill(-2.8, 3.0);
 
       const soil = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.1, 3.2), mat(0x3d2314));
       soil.position.set(0, 0.05, 3.2);
@@ -662,10 +900,9 @@
     }
     createFarm(-11.5, 13);
 
-    // --- 7. BICYCLES & 7 NAMED PERSONS ---
+    // --- 7. BICYCLES & NAMED CITIZENS ---
     function createCyclist(x, z, shirtHex) {
       const g = new THREE.Group();
-      // Bike Frames
       const frame = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.8), mat(0xef4444));
       frame.position.y = 0.25;
       g.add(frame);
@@ -675,7 +912,6 @@
         wheel.position.set(0, 0.18, wz);
         g.add(wheel);
       }
-      // Rider
       const rider = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.18), mat(shirtHex));
       rider.position.set(0, 0.45, 0);
       g.add(rider);
@@ -740,7 +976,7 @@
     ];
     citizens.forEach(c => createNamedPerson(c.x, c.z, c.name, c.color));
 
-    // --- 8. TREES ---
+    // --- 8. TREES BESIDE HIGHWAYS ---
     function createTree(x, z) {
       const g = new THREE.Group();
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 1.5, 6), mat(0x78350f));
@@ -757,7 +993,9 @@
 
     const treePositions = [
       [-14, -10], [-14, -5], [-14, 0], [-14, 5],
-      [14, -10], [14, -5], [14, 0], [14, 5]
+      [14, -10], [14, -5], [14, 0], [14, 5],
+      [-8.2, -12], [-8.2, -8], [-8.2, 8], [-8.2, 12],
+      [8.2, -12], [8.2, -8], [8.2, 8], [8.2, 12]
     ];
     treePositions.forEach(([tx, tz]) => createTree(tx, tz));
 
@@ -794,12 +1032,10 @@
         nightFactor = Math.min(Math.max((0.1 - sunHeight) / 0.3, 0), 1);
       }
 
-      // Nighttime Schedule: People & Cyclists go indoors during Night
       const isNight = sunHeight <= 0.0;
       pedestrians.forEach(p => p.group.visible = !isNight);
       cyclists.forEach(c => c.group.visible = !isNight);
 
-      // Night Emissives & Pointlights
       nighttimeEmissives.forEach(m => m.emissiveIntensity = nightFactor * 2.5);
       nighttimePointLights.forEach(l => l.intensity = nightFactor * 4.0);
 
@@ -861,7 +1097,6 @@
 
     // --- 10. MAIN ANIMATION LOOP ---
     const clock = new THREE.Clock();
-    const carLookVec = new THREE.Vector3();
 
     function animate() {
       requestAnimationFrame(animate);
@@ -870,58 +1105,12 @@
 
       updateDayNightCycle(dt);
 
-      // Rotate Windmill
       windTurbines.forEach(wt => { wt.rotor.rotation.z += wt.speed * dt; });
 
-      // Swim River Fishes
       riverFishes.forEach(f => {
         f.group.position.z += f.speed * dt;
         if (f.group.position.z > 16) f.group.position.z = -16;
       });
-
-      // Walk Citizens along Sidewalks (Daytime)
-      pedestrians.forEach(p => {
-        if (p.group.visible) {
-          p.group.position.z += p.speed * dt * p.dir;
-          if (Math.abs(p.group.position.z) > 15) p.dir *= -1;
-        }
-      });
-
-      // Move Cyclists along Bike Lane
-      cyclists.forEach(c => {
-        if (c.group.visible) {
-          c.group.position.z += c.speed * dt;
-          if (c.group.position.z > 16) c.group.position.z = -16;
-        }
-      });
-
-      // Route Cars to Parking Lot
-      animatedVehicles.forEach(v => {
-        const target = v.waypoints[v.targetIdx];
-        carLookVec.subVectors(target, v.group.position);
-        carLookVec.y = 0;
-        const dist = carLookVec.length();
-
-        if (dist < 0.2) {
-          if (v.targetIdx < v.waypoints.length - 1) {
-            v.targetIdx++;
-          }
-        } else {
-          carLookVec.normalize();
-          v.group.position.addScaledVector(carLookVec, v.speed * dt);
-          v.group.lookAt(target.x, v.group.position.y, target.z);
-        }
-      });
-
-      // Animate Rain
-      if (rain.visible) {
-        const positions = rain.geometry.attributes.position.array;
-        for (let i = 1; i < rainCount * 3; i += 3) {
-          positions[i] -= 22 * dt;
-          if (positions[i] < 0) positions[i] = 20;
-        }
-        rain.geometry.attributes.position.needsUpdate = true;
-      }
 
       controls.update();
       renderer.render(scene, camera);
