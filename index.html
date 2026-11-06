@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -407,12 +408,22 @@
     createStreetlight(-5, 2.2);
     createStreetlight(-5, -2.2);
     createStreetlight(11.5, 10);
-    // --- 5. CENTRAL PARK & CHRISTMAS TREE (RELOCATED TO SPACIOUS EAST PARK ZONE) ---
+    createStreetlight(11.5, -10);
+    createStreetlight(11.5, 4);
+    createStreetlight(11.5, -4);
+    createStreetlight(6.5, 10);
+    createStreetlight(6.5, -10);
+    createStreetlight(-12.0, 2.2);
+    createStreetlight(-12.0, -2.2);
+    createStreetlight(12.0, 2.2);
+    createStreetlight(12.0, -2.2);
+
+    // --- 5. CENTRAL PARK & CHRISTMAS TREE (ISOLATED TO EAST BANK PARK ZONE) ---
     function createCentralParkWithChristmasTree(x, z) {
       const g = new THREE.Group();
 
-      // Extended Park Lawn
-      const lawn = new THREE.Mesh(new THREE.BoxGeometry(11, 0.03, 11), mat(0x15803d));
+      // Extended Park Lawn - Strictly local to East Bank
+      const lawn = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.03, 9.5), mat(0x15803d));
       lawn.position.y = 0.015;
       g.add(lawn);
 
@@ -501,8 +512,8 @@
         g.add(bg);
       }
 
-      createParkBench(-3.2, 3.2, Math.PI / 4);
-      createParkBench(3.2, -3.2, -Math.PI * 0.75);
+      createParkBench(-2.8, 2.8, Math.PI / 4);
+      createParkBench(2.8, -2.8, -Math.PI * 0.75);
 
       g.position.set(x, 0, z);
 
@@ -514,15 +525,15 @@
       g.traverse(c => { if (c.isMesh && !c.userData.title) { c.userData = meta; interactiveObjects.push(c); } });
       scene.add(g);
     }
-    // Placed deep in open space on the East Bank (well clear of roads)
-    createCentralParkWithChristmasTree(16.0, 9.0);
+    // Placed strictly on the East Bank (X = +14.0, Z = +9.0), opposite to West Bank farm plot
+    createCentralParkWithChristmasTree(14.0, 9.0);
 
-    // --- 6. FARMS & AGRICULTURE ZONE (EXPANDED WITH CORN & RICE) ---
+    // --- 6. FARMS & AGRICULTURE ZONE (STRICTLY CONTAINED ON WEST BANK) ---
     function createFarmZone(x, z) {
       const g = new THREE.Group();
 
-      // Expanded Farm Base Soil & Paddy Plot
-      const farmSoil = new THREE.Mesh(new THREE.BoxGeometry(14, 0.04, 14), mat(0x3f2305, 0.95));
+      // Farm Base Soil & Paddy Plot
+      const farmSoil = new THREE.Mesh(new THREE.BoxGeometry(11, 0.04, 12), mat(0x3f2305, 0.95));
       farmSoil.position.y = 0.02;
       g.add(farmSoil);
 
@@ -550,27 +561,26 @@
         }
       }
 
-      // Perimeter Fence around expanded farm plot
-      addFenceSegment(-6.8, -6.8, -6.8, 6.8);
-      addFenceSegment(-6.8, 6.8, 6.8, 6.8);
-      addFenceSegment(6.8, 6.8, 6.8, -6.8);
-      addFenceSegment(6.8, -6.8, 1.5, -6.8);
-      addFenceSegment(-1.5, -6.8, -6.8, -6.8);
+      // Perimeter Fence bounded tightly around West Bank farm plot
+      addFenceSegment(-5.3, -5.8, -5.3, 5.8);
+      addFenceSegment(-5.3, 5.8, 5.3, 5.8);
+      addFenceSegment(5.3, 5.8, 5.3, -5.8);
+      addFenceSegment(5.3, -5.8, 1.2, -5.8);
+      addFenceSegment(-1.2, -5.8, -5.3, -5.8);
 
-      // 1. Corn Crop Rows (Left Side of Farm)
-      for (let plotX = -5.8; plotX <= -1.8; plotX += 1.3) {
-        const plotBed = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.12, 11), mat(0x271605));
+      // 1. Corn Crop Rows (West side of farm)
+      for (let plotX = -4.5; plotX <= -1.2; plotX += 1.3) {
+        const plotBed = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.12, 9.5), mat(0x271605));
         plotBed.position.set(plotX, 0.06, 0);
         g.add(plotBed);
 
         // Dense Corn Plants
-        for (let cz = -5.0; cz <= 5.0; cz += 0.6) {
+        for (let cz = -4.2; cz <= 4.2; cz += 0.65) {
           const stalk = new THREE.Group();
           const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.2, 6), mat(0x4d7c0f));
           stem.position.y = 0.6;
           stalk.add(stem);
 
-          // Corn Leaves
           for (let l = 0; l < 4; l++) {
             const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.03, 0.1), mat(0x65a30d));
             leaf.position.set(0.15 * (l % 2 === 0 ? 1 : -1), 0.4 + l * 0.2, 0);
@@ -578,26 +588,24 @@
             stalk.add(leaf);
           }
 
-          // Ears of Corn
           const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.3, 6), mat(0xfacc15));
           ear.position.set(0.06, 0.7, 0.05);
           ear.rotation.z = -0.3;
           stalk.add(ear);
 
-          stalk.position.set(plotX + (Math.random() - 0.5) * 0.15, 0.06, cz);
+          stalk.position.set(plotX + (Math.random() - 0.5) * 0.1, 0.06, cz);
           g.add(stalk);
         }
       }
 
-      // 2. Rice Paddy Terraces & Plants (Right Side of Farm)
-      const ricePaddyBase = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.08, 11), mat(0x0284c7, 0.2)); // Flooded water layer
-      ricePaddyBase.position.set(3.5, 0.05, 0);
+      // 2. Rice Paddy Terraces & Plants (East side of farm plot)
+      const ricePaddyBase = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.08, 9.5), mat(0x0284c7, 0.2));
+      ricePaddyBase.position.set(2.8, 0.05, 0);
       g.add(ricePaddyBase);
 
-      for (let rx = 1.6; rx <= 5.4; rx += 0.75) {
-        for (let rz = -5.0; rz <= 5.0; rz += 0.55) {
+      for (let rx = 1.2; rx <= 4.4; rx += 0.75) {
+        for (let rz = -4.2; rz <= 4.2; rz += 0.6) {
           const riceCluster = new THREE.Group();
-          // Rice Stalk Tufts (Golden-Green)
           const tuftColor = (Math.random() > 0.4) ? 0x84cc16 : 0xeab308;
           for (let blade = 0; blade < 5; blade++) {
             const rBlade = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.6, 0.03), mat(tuftColor));
@@ -611,572 +619,6 @@
         }
       }
 
-      // 3. Chicken Livestock Pen (Centered in Farm)
+      // 3. Chicken Livestock Pen
       for (let c = 0; c < 7; c++) {
-        const ch = new THREE.Group();
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), mat(0xfef08a));
-        body.scale.set(1, 0.8, 1.2);
-        body.position.y = 0.2;
-        ch.add(body);
-
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), mat(0xffffff));
-        head.position.set(0, 0.35, 0.15);
-        ch.add(head);
-
-        const comb = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.08, 0.1), mat(0xdc2626));
-        comb.position.set(0, 0.45, 0.15);
-        ch.add(comb);
-
-        const beak = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 4), mat(0xf97316));
-        beak.rotation.x = Math.PI / 2;
-        beak.position.set(0, 0.33, 0.24);
-        ch.add(beak);
-
-        const cx = -0.2 + (Math.random() - 0.5) * 1.5;
-        const cz = (Math.random() - 0.5) * 4.0;
-        ch.position.set(cx, 0.04, cz);
-        g.add(ch);
-
-        chickens.push({ group: ch, baseX: cx, baseZ: cz, phase: Math.random() * 10 });
-      }
-
-      g.position.set(x, 0, z);
-
-      const farmMeta = {
-        tag: "AGRICULTURE", title: "Corn & Rice Paddy Farm",
-        description: "Sustainable agricultural field with corn crops, flooded rice paddies, and free-range poultry.",
-        stat1: "Corn & Rice", stat1Label: "Crops", stat2: "100%", stat2Label: "Organic"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = farmMeta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-    // Shifted farm safely to West side clear of main road
-    createFarmZone(-13.5, -9.0);
-
-    // --- 7. WATER TANK TOWER (SWAPPED TO FARM ZONE) & WINDMILLS ---
-    function createWaterTankTower(x, z) {
-      const g = new THREE.Group();
-      const metalMat = mat(0x64748b, 0.4, 0.8);
-
-      // Metal Legs
-      for (let angle of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
-        const lx = Math.cos(angle) * 0.9;
-        const lz = Math.sin(angle) * 0.9;
-        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 4.5), metalMat);
-        leg.position.set(lx, 2.25, lz);
-        leg.rotation.z = -lx * 0.08;
-        leg.rotation.x = lz * 0.08;
-        g.add(leg);
-      }
-
-      // Tank Reservoir
-      const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 2.2, 16), mat(0x0284c7, 0.3, 0.3));
-      tank.position.y = 5.2;
-      g.add(tank);
-
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.4, 0.7, 16), mat(0x0369a1, 0.3, 0.5));
-      roof.position.y = 6.65;
-      g.add(roof);
-
-      g.position.set(x, 0, z);
-
-      const tankMeta = {
-        tag: "UTILITY", title: "Irrigation Water Tower",
-        description: "Elevated municipal water tank providing clean water storage and gravity irrigation for farm crops.",
-        stat1: "60,000L", stat1Label: "Capacity", stat2: "Irrigation", stat2Label: "Supply"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = tankMeta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-    // Water tank placed directly in the farm perimeter safely off roads
-    createWaterTankTower(-15.5, -16.0);
-
-    function createWindmill(x, z) {
-      const g = new THREE.Group();
-
-      const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.6, 7, 12), mat(0xf8fafc, 0.6));
-      tower.position.y = 3.5;
-      tower.castShadow = true;
-      g.add(tower);
-
-      const nacelle = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 1.2), mat(0x0284c7));
-      nacelle.position.set(0, 7.0, 0);
-      g.add(nacelle);
-
-      // Blades Group
-      const bladesGroup = new THREE.Group();
-      bladesGroup.position.set(0, 7.0, 0.65);
-
-      const hub = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.4, 12), mat(0x0284c7));
-      hub.rotation.x = Math.PI / 2;
-      bladesGroup.add(hub);
-
-      for (let b = 0; b < 3; b++) {
-        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.6, 0.04), mat(0xffffff));
-        blade.position.y = 1.3;
-        const bHolder = new THREE.Group();
-        bHolder.rotation.z = (b * Math.PI * 2) / 3;
-        bHolder.add(blade);
-        bladesGroup.add(bHolder);
-      }
-      g.add(bladesGroup);
-      windmillBlades.push(bladesGroup);
-
-      g.position.set(x, 0, z);
-
-      const wmMeta = {
-        tag: "ENERGY", title: "Clean Wind Turbine",
-        description: "Zero-emission wind generator supplying renewable electric power to the city grid.",
-        stat1: "2.5 MW", stat1Label: "Power", stat2: "100%", stat2Label: "Renewable"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = wmMeta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    createWindmill(-16.0, 15.0);
-    createWindmill(-16.0, 16.0);
-    createWindmill(-16.0, 11.0);
-    createWindmill(-16.0, 6.0);
-
-    // --- 8. RESIDENTIAL HOUSES NEIGHBORHOODS (POSITIONED SAFELY CLEAR OF ROADS) ---
-    function createResidentialNeighborhoods() {
-      const colors = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b, 0x8b5cf6, 0xec4899];
-
-      function createHouse(hx, hz, rotY, cIndex) {
-        const hg = new THREE.Group();
-        const base = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.4, 2.0), mat(0xf8fafc));
-        base.position.y = 0.7;
-        base.castShadow = true;
-        hg.add(base);
-
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(1.7, 1.0, 4), mat(colors[cIndex % colors.length]));
-        roof.position.y = 1.9;
-        roof.rotation.y = Math.PI / 4;
-        roof.castShadow = true;
-        hg.add(roof);
-
-        // Windows with night glow
-        const winMat = glowWindowMat;
-        const win1 = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), winMat);
-        win1.position.set(0, 0.8, 1.01);
-        hg.add(win1);
-
-        hg.position.set(hx, 0, hz);
-        hg.rotation.y = rotY;
-
-        const hMeta = {
-          tag: "RESIDENTIAL", title: "Eco-Home Residence",
-          description: "Energy-efficient housing unit fitted with solar panels and smart insulation.",
-          stat1: "Solar", stat1Label: "Power", stat2: "A+", stat2Label: "Efficiency"
-        };
-        hg.traverse(c => { if (c.isMesh) { c.userData = hMeta; interactiveObjects.push(c); } });
-        scene.add(hg);
-      }
-
-      // West Side Residential Homes (Set back at Z >= 6.0 and Z <= -6.0)
-      createHouse(-15.0, 16.0, 0, 0);
-      createHouse(-11.5, 16.0, 0, 1);
-      createHouse(-8.0, 16.0, 0, 2);
-      createHouse(-4.5, 16.0, 0, 3);
-      createHouse(-15.0, 12.0, 0, 4);
-
-      // East Side Suburban Setback Residential Homes (All |Z| >= 5.0 & |X| >= 14.5)
-      createHouse(16.5, -6.0, -Math.PI / 2, 5);
-      createHouse(16.5, -9.5, -Math.PI / 2, 0);
-      createHouse(16.5, -16.0, -Math.PI / 2, 1);
-      createHouse(4.5, -16.0, 0, 2);
-      createHouse(4.5, 16.0, 0, 3);
-    }
-    createResidentialNeighborhoods();
-
-    // --- 9. STATIONS & COMMUNITY INFRASTRUCTURE ---
-    function createSignboard(text) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 256; canvas.height = 64;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 256, 64);
-      ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 6; ctx.strokeRect(3, 3, 250, 58);
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(text, 128, 32);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      return new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.6), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
-    }
-
-    function createStationBuilding(x, z, label, colorHex) {
-      const g = new THREE.Group();
-      const bldg = new THREE.Mesh(new THREE.BoxGeometry(4.5, 2.2, 3.5), mat(colorHex));
-      bldg.position.y = 1.1;
-      bldg.castShadow = true;
-      g.add(bldg);
-
-      const sign = createSignboard(label);
-      sign.position.set(0, 2.5, 1.76);
-      g.add(sign);
-
-      g.position.set(x, 0, z);
-
-      const meta = {
-        tag: "STATION", title: label + " Facility",
-        description: "Active community infrastructure facility supporting sustainable city operations.",
-        stat1: "Active", stat1Label: "Status", stat2: "24/7", stat2Label: "Operation"
-      };
-      g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
-      scene.add(g);
-    }
-
-    // Stations moved deep into corners/perimeters with clear road setbacks
-    createStationBuilding(15.0, 15.0, "POLICE", 0x1e3a8a);
-    createStationBuilding(15.0, -14.0, "MARKET", 0x047857);
-    createStationBuilding(-12.0, 6.0, "SCHOOL", 0xd97706);
-    createStationBuilding(15.5, -6.5, "HOSPITAL", 0x0284c7);
-
-    // Dynamic Station Crowd Personnel
-    function createHumanMesh(colorHex) {
-      const hg = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.5, 8), mat(colorHex));
-      body.position.y = 0.45;
-      hg.add(body);
-
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), mat(0xfde047));
-      head.position.y = 0.8;
-      hg.add(head);
-
-      return hg;
-    }
-
-    function addStationPeople(x, z, radius, count, colorHex, stationName) {
-      for (let i = 0; i < count; i++) {
-        const person = createHumanMesh(colorHex);
-        const startAngle = (i / count) * Math.PI * 2;
-        const px = x + Math.cos(startAngle) * radius;
-        const pz = z + Math.sin(startAngle) * radius;
-
-        person.position.set(px, 0, pz);
-        scene.add(person);
-
-        pedestrians.push({
-          group: person,
-          centerX: x,
-          centerZ: z,
-          radius: radius + (Math.random() - 0.5) * 0.5,
-          angle: startAngle,
-          speed: (0.3 + Math.random() * 0.4) * (Math.random() > 0.5 ? 1 : -1),
-          station: stationName
-        });
-      }
-    }
-
-    addStationPeople(15.0, 15.0, 1.5, 4, 0x1d4ed8, "Police");
-    addStationPeople(15.0, -14.0, 2.0, 6, 0x10b981, "Market");
-    addStationPeople(-12.0, 6.0, 2.0, 6, 0xf59e0b, "School");
-    addStationPeople(15.5, -6.5, 1.5, 4, 0xffffff, "Hospital");
-
-    // --- 10. THE 7 NAMED CITIZENS (WITH RAIN UMBRELLAS & NIGHT VANISH) ---
-    const citizenData = [
-      { name: "Michaela", color: 0xec4899, umbrellaColor: 0xf472b6, behavior: "walking", x: 15, z: 10, pathR: 1.8 },
-      { name: "Shella", color: 0x8b5cf6, umbrellaColor: 0xa78bfa, behavior: "sitting", x: 12.8, z: 12.2, rot: Math.PI / 4 },
-      { name: "Tuesday", color: 0x06b6d4, umbrellaColor: 0x22d3ee, behavior: "running", x: 16, z: 6, pathR: 2.5 },
-      { name: "Cherry", color: 0xef4444, umbrellaColor: 0xf87171, behavior: "walking", x: 17, z: 9, pathR: 1.5 },
-      { name: "Mariel", color: 0x10b981, umbrellaColor: 0x34d399, behavior: "sitting", x: 19.2, z: 5.8, rot: -Math.PI * 0.75 },
-      { name: "Althea", color: 0xf59e0b, umbrellaColor: 0xfbbf24, behavior: "walking", x: 5, z: 13, pathR: 2.2 },
-      { name: "Chloe", color: 0x3b82f6, umbrellaColor: 0x60a5fa, behavior: "running", x: 5, z: -13, pathR: 2.5 }
-    ];
-
-    citizenData.forEach((c) => {
-      const g = new THREE.Group();
-
-      // Body & Legs
-      const shirt = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.55, 8), mat(c.color));
-      shirt.position.y = 0.5;
-      shirt.castShadow = true;
-      g.add(shirt);
-
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), mat(0xfed7aa));
-      head.position.y = 0.9;
-      g.add(head);
-
-      // Hair
-      const hair = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), mat(0x451a03));
-      hair.position.set(0, 0.95, -0.02);
-      g.add(hair);
-
-      // 3D Umbrella (toggled in rain)
-      const umbrellaGroup = new THREE.Group();
-      const canopy = new THREE.Mesh(new THREE.ConeGeometry(0.65, 0.25, 8), mat(c.umbrellaColor, 0.4));
-      canopy.position.y = 1.45;
-      umbrellaGroup.add(canopy);
-
-      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.7), mat(0x1e293b));
-      handle.position.y = 1.1;
-      umbrellaGroup.add(handle);
-
-      umbrellaGroup.visible = false;
-      g.add(umbrellaGroup);
-
-      g.position.set(c.x, 0, c.z);
-
-      const meta = {
-        tag: "CITIZEN", title: c.name,
-        description: `${c.name} is a resident of Sustainable City. Activity: ${c.behavior}. Returns home at night.`,
-        stat1: c.name, stat1Label: "Name", stat2: c.behavior.toUpperCase(), stat2Label: "Activity"
-      };
-
-      g.traverse(obj => {
-        if (obj.isMesh) {
-          obj.userData = meta;
-          interactiveObjects.push(obj);
-        }
-      });
-
-      scene.add(g);
-
-      namedCitizens.push({
-        group: g,
-        umbrella: umbrellaGroup,
-        data: c,
-        angle: Math.random() * Math.PI * 2,
-        baseX: c.x,
-        baseZ: c.z
-      });
-    });
-
-    // --- 11. VEHICLES & DIRECTIONAL TRAFFIC ---
-    function createCar(colorHex) {
-      const g = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.45, 0.7), mat(colorHex));
-      body.position.y = 0.3;
-      body.castShadow = true;
-      g.add(body);
-
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.35, 0.6), mat(0x1e293b));
-      cabin.position.set(-0.1, 0.6, 0);
-      g.add(cabin);
-
-      const wheelGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.1, 8);
-      const wheelMat = mat(0x0f172a);
-      for (let wx of [-0.35, 0.35]) {
-        for (let wz of [-0.35, 0.35]) {
-          const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-          wheel.rotation.x = Math.PI / 2;
-          wheel.position.set(wx, 0.12, wz);
-          g.add(wheel);
-        }
-      }
-      return g;
-    }
-
-    const vehicle1 = createCar(0xef4444); // Eastbound
-    scene.add(vehicle1);
-    animatedVehicles.push({ group: vehicle1, x: -18, z: 0.7, lane: 'MAIN_EAST', speed: 0.08, dirY: 0 });
-
-    const vehicle2 = createCar(0x3b82f6); // Westbound
-    scene.add(vehicle2);
-    animatedVehicles.push({ group: vehicle2, x: 18, z: -0.7, lane: 'MAIN_WEST', speed: 0.08, dirY: Math.PI });
-
-    const vehicle3 = createCar(0x10b981); // Southbound
-    scene.add(vehicle3);
-    animatedVehicles.push({ group: vehicle3, x: 9.7, z: -18, lane: 'CROSS_SOUTH', speed: 0.07, dirY: Math.PI / 2 });
-
-    const vehicle4 = createCar(0xf59e0b); // Northbound
-    scene.add(vehicle4);
-    animatedVehicles.push({ group: vehicle4, x: 8.3, z: 18, lane: 'CROSS_NORTH', speed: 0.07, dirY: -Math.PI / 2 });
-
-    // --- 12. INTERACTION RAYCASTER & UI CONTROLS ---
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    const infoCard = document.getElementById('info-card');
-
-    window.addEventListener('click', (e) => {
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(interactiveObjects);
-
-      if (intersects.length > 0) {
-        let hitObj = intersects[0].object;
-        let data = hitObj.userData;
-        
-        while ((!data || !data.title) && hitObj.parent) {
-          hitObj = hitObj.parent;
-          data = hitObj.userData;
-        }
-
-        if (data && data.title) {
-          document.getElementById('card-tag').innerText = data.tag;
-          document.getElementById('card-title').innerText = data.title;
-          document.getElementById('card-desc').innerText = data.description;
-          document.getElementById('stat-1').innerText = data.stat1;
-          document.getElementById('stat-1-label').innerText = data.stat1Label;
-          document.getElementById('stat-2').innerText = data.stat2;
-          document.getElementById('stat-2-label').innerText = data.stat2Label;
-          infoCard.classList.remove('hidden');
-        }
-      }
-    });
-
-    document.getElementById('close-btn').addEventListener('click', () => {
-      infoCard.classList.add('hidden');
-    });
-
-    document.getElementById('speedSlider').addEventListener('input', (e) => {
-      daySpeed = parseFloat(e.target.value) * 0.2;
-      document.getElementById('speedVal').innerText = parseFloat(e.target.value).toFixed(1) + 'x';
-    });
-
-    document.getElementById('toggleRain').addEventListener('click', () => {
-      isRaining = !isRaining;
-      rainParticles.visible = isRaining;
-    });
-
-    // --- 13. ANIMATION LOOP ---
-    const clock = new THREE.Clock();
-
-    function animate() {
-      requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      const time = clock.getElapsedTime();
-
-      // Day & Night Cycle
-      dayNightCycle += delta * daySpeed;
-      const sunAngle = dayNightCycle;
-      sunLight.position.x = Math.cos(sunAngle) * 45;
-      sunLight.position.y = Math.sin(sunAngle) * 45;
-      sunLight.position.z = 22;
-
-      const isNight = sunLight.position.y < 0;
-      isEveningOrNight = sunLight.position.y <= 10;
-
-      // Adjust sky background
-      if (sunLight.position.y > 10) {
-        scene.background.lerp(daySky, 0.05);
-      } else if (sunLight.position.y > -2) {
-        scene.background.lerp(sunsetSky, 0.05);
-      } else {
-        scene.background.lerp(nightSky, 0.05);
-      }
-
-      // Emissives for Night & Evening
-      const emissiveFactor = isNight ? 1.0 : (isEveningOrNight ? 0.6 : 0.0);
-      nighttimeEmissives.forEach(m => {
-        m.emissiveIntensity = emissiveFactor;
-      });
-      nighttimePointLights.forEach(l => {
-        l.intensity = isNight ? 1.8 : (isEveningOrNight ? 1.0 : 0);
-      });
-
-      // Christmas Light Blinking
-      christmasLights.forEach(item => {
-        if (isEveningOrNight) {
-          const blink = Math.sin(time * 6 + item.blinkOffset) > 0 ? 1.2 : 0.1;
-          item.material.emissiveIntensity = blink;
-        } else {
-          item.material.emissiveIntensity = 0;
-        }
-      });
-
-      // Rotate Windmill Blades
-      windmillBlades.forEach(blades => {
-        blades.rotation.z += delta * 1.8;
-      });
-
-      // Animate Farm Chickens
-      chickens.forEach(c => {
-        const peck = Math.sin(time * 5 + c.phase) * 0.1;
-        c.group.rotation.x = peck;
-        c.group.position.x = c.baseX + Math.sin(time * 0.5 + c.phase) * 0.2;
-      });
-
-      // Named Citizens Logic (Vanishing at Evening/Night & Umbrella in Rain)
-      namedCitizens.forEach(c => {
-        // Evening / Night Vanish Logic
-        if (isEveningOrNight) {
-          c.group.visible = false;
-        } else {
-          c.group.visible = true;
-
-          // Umbrella Logic
-          c.umbrella.visible = isRaining;
-
-          // Movement Behaviors
-          if (c.data.behavior === 'walking') {
-            c.angle += delta * 0.5;
-            c.group.position.x = c.baseX + Math.cos(c.angle) * c.data.pathR;
-            c.group.position.z = c.baseZ + Math.sin(c.angle) * c.data.pathR;
-            c.group.rotation.y = -c.angle + Math.PI / 2;
-          } else if (c.data.behavior === 'running') {
-            c.angle += delta * 1.2;
-            c.group.position.x = c.baseX + Math.cos(c.angle) * c.data.pathR;
-            c.group.position.z = c.baseZ + Math.sin(c.angle) * c.data.pathR;
-            c.group.rotation.y = -c.angle + Math.PI / 2;
-          } else if (c.data.behavior === 'sitting') {
-            c.group.position.set(c.baseX, 0.15, c.baseZ);
-            c.group.rotation.y = c.data.rot || 0;
-          }
-        }
-      });
-
-      // Move River Fishes
-      riverFishes.forEach(f => {
-        f.group.position.z += f.speed * delta;
-        if (f.group.position.z > 19) f.group.position.z = -19;
-      });
-
-      // Move Station Pedestrians
-      pedestrians.forEach(p => {
-        p.angle += p.speed * delta;
-        p.group.position.x = p.centerX + Math.cos(p.angle) * p.radius;
-        p.group.position.z = p.centerZ + Math.sin(p.angle) * p.radius;
-        p.group.rotation.y = -p.angle;
-      });
-
-      // Vehicle Movement in Lanes
-      animatedVehicles.forEach(v => {
-        v.group.rotation.y = v.dirY;
-
-        if (v.lane === 'MAIN_EAST') {
-          v.x += v.speed;
-          if (v.x > 20) v.x = -20;
-          v.group.position.set(v.x, 0, v.z);
-        } else if (v.lane === 'MAIN_WEST') {
-          v.x -= v.speed;
-          if (v.x < -20) v.x = 20;
-          v.group.position.set(v.x, 0, v.z);
-        } else if (v.lane === 'CROSS_SOUTH') {
-          v.z += v.speed;
-          if (v.z > 20) v.z = -20;
-          v.group.position.set(v.x, 0, v.z);
-        } else if (v.lane === 'CROSS_NORTH') {
-          v.z -= v.speed;
-          if (v.z < -20) v.z = 20;
-          v.group.position.set(v.x, 0, v.z);
-        }
-      });
-
-      // Rain Particles Animation
-      if (isRaining) {
-        const positions = rainGeo.attributes.position.array;
-        for (let i = 1; i < rainCount * 3; i += 3) {
-          positions[i] -= 0.8;
-          if (positions[i] < 0) positions[i] = 45;
-        }
-        rainGeo.attributes.position.needsUpdate = true;
-      }
-
-      controls.update();
-      renderer.render(scene, camera);
-    }
-
-    animate();
-
-    // Window Resize Handler
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
-</body>
-</html>
+        const ch = new THREE.Gro
