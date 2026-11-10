@@ -208,7 +208,7 @@
       }
       createWoodenBridge(0, 0);
 
-      // Roads & Sidewalks
+      // Roads & Sidewalks (Positioned cleanly off center)
       const mainRoad = new THREE.Mesh(new THREE.BoxGeometry(36, 0.02, 2.8), mat(0x1e293b));
       mainRoad.position.set(0, 0.02, 0);
       scene.add(mainRoad);
@@ -305,7 +305,7 @@
         g.traverse(c => { if (c.isMesh) { c.userData = meta; interactiveObjects.push(c); } });
         scene.add(g);
       }
-      createParkAndPlayground(-5.5, -3.5);
+      createParkAndPlayground(-13.5, -3.5);
 
       function addBigRooftopSolar(parent, width, depth, heightPos) {
         const panel = new THREE.Mesh(new THREE.BoxGeometry(width, 0.08, depth), solarMat);
@@ -355,7 +355,7 @@
         return g;
       }
 
-      // Civic Buildings
+      // Civic Buildings (Pushed to East Side Outer Bounds: x = 13.5)
       function createHospital(x, z) {
         const g = new THREE.Group();
         const body = new THREE.Mesh(new THREE.BoxGeometry(4.2, 4.0, 3.6), mat(0xf8fafc));
@@ -466,14 +466,14 @@
         scene.add(g);
       }
 
-      createHospital(11.5, -13);
-      createSchool(11.5, -7);
-      createChurch(12.0, -1);
-      createGroceryMarket(11.5, 5);
-      createPoliceStation(11.5, 10.5);
-      createFireStation(11.5, 14.5);
+      createHospital(13.5, -13);
+      createSchool(13.5, -7);
+      createChurch(13.5, -1);
+      createGroceryMarket(13.5, 5);
+      createPoliceStation(13.5, 10.5);
+      createFireStation(13.5, 14.5);
 
-      // Residential Houses & Vehicles
+      // Residential Houses (Pushed to West Side Outer Bounds: x = -13.5)
       function createSolarHouse(x, z) {
         const g = new THREE.Group();
         const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.5, 2.0), mat(0xfff7ed));
@@ -491,7 +491,7 @@
         g.position.set(x, 0, z);
         scene.add(g);
       }
-      [[-11.5, -13], [-11.5, -9.5], [-11.5, -6.0], [-11.5, -2.5], [-11.5, 1.0], [-11.5, 4.5]].forEach(([hx, hz]) => createSolarHouse(hx, hz));
+      [[-13.5, -13], [-13.5, -9.5], [-13.5, -6.0], [-13.5, -2.5], [-13.5, 1.0], [-13.5, 4.5]].forEach(([hx, hz]) => createSolarHouse(hx, hz));
 
       function createParkingLot(x, z) {
         const g = new THREE.Group();
@@ -501,7 +501,7 @@
         g.position.set(x, 0, z);
         scene.add(g);
       }
-      createParkingLot(-11.5, -16);
+      createParkingLot(-13.5, -16);
 
       function createEVWithWindows(colorHex) {
         const carGroup = new THREE.Group();
@@ -520,12 +520,12 @@
         new THREE.Vector3(6.5, 0, 0),
         new THREE.Vector3(-6.5, 0, 0),
         new THREE.Vector3(-6.5, 0, -16),
-        new THREE.Vector3(-11.5, 0, -16)
+        new THREE.Vector3(-13.5, 0, -16)
       ];
       const animatedCar = createEVWithWindows(0x10b981);
       animatedVehicles.push({ group: animatedCar, waypoints: carPathWaypoints, targetIdx: 0, speed: 4.0 });
 
-      // Farm, Water Tank & Chicken
+      // Farm, Water Tank & Chicken (Shifted back to rural corner)
       function createWaterTank(x, z) {
         const g = new THREE.Group();
         for (let lx of [-0.4, 0.4]) {
@@ -616,10 +616,10 @@
         scene.add(g);
       }
 
-      createFarm(-11.5, 10.5);
-      createWaterTank(-14.2, 14.2);
+      createFarm(-13.5, 10.5);
+      createWaterTank(-15.5, 14.2);
 
-      // Citizens & Cyclists
+      // Citizens & Cyclists (Strictly on Sidewalks)
       function createCyclist(x, z, shirtHex) {
         const g = new THREE.Group();
         const frame = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.8), mat(0xef4444));
@@ -654,7 +654,7 @@
         { name: "Mariel", color: 0xeab308, x: 8.2, z: 2 }
       ].forEach(c => createNamedPerson(c.x, c.z, c.name, c.color));
 
-      // Trees
+      // Trees (Outer Boundaries)
       function createTree(x, z) {
         const g = new THREE.Group();
         const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.15, 1.5, 6), mat(0x78350f));
@@ -666,7 +666,7 @@
         g.position.set(x, 0, z);
         scene.add(g);
       }
-      [[-14, -10], [-14, -5], [-14, 0], [14, -10], [14, -5], [14, 0]].forEach(([tx, tz]) => createTree(tx, tz));
+      [[-16, -10], [-16, -5], [-16, 0], [16, -10], [16, -5], [16, 0]].forEach(([tx, tz]) => createTree(tx, tz));
 
       // Animation Loop
       const clock = new THREE.Clock();
